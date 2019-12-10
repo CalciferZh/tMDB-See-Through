@@ -9,6 +9,8 @@ MOVIE_ATTRIBUTES = {
 }
 
 MOVIE_POP_THRES = 50 # slightly less than 10% -> ~500 movies
+ACTOR_MOVIE_THRES = 3 # slightly less than 10% -> ~500 movies
+DIRECTOR_MOVIE_THRES = 0
 
 ACTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 DIRECTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}

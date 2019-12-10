@@ -16,5 +16,18 @@ def movie_inspect():
   plt.show()
 
 
+def actor_inspect():
+  data = \
+    [len(r.split(',')) for r in pandas.read_csv(ACTOR_NODE_FILE)['movie_id']]
+  threshold = np.percentile(data, 90)
+  print(threshold)
+  plt.hist(data, bins=100)
+  plt.savefig('actor_movies.png')
+  plt.title('Number of Movies for Actors')
+  plt.xlabel('movie number')
+  plt.ylabel('actor number')
+  plt.show()
+
+
 if __name__ == '__main__':
-  movie_inspect()
+  actor_inspect()
