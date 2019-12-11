@@ -10,8 +10,6 @@ class Movie:
     self.director = {}
     self.cast = {}
 
-    self.pos = np.random.uniform(size=[2])
-
   def crew(self):
     return self.director + self.cast
 
@@ -23,5 +21,3 @@ class Participant:
     self.attributes.pop('id')
 
     self.movies = {}
-
-    self.pos = np.random.uniform(size=[2])
