@@ -34,6 +34,7 @@ def build_connections(movies, participants, role, threshold):
     m.attributes[role] = {}
   for p in participants.values():
     movie_ids = [int(m.strip()) for m in p.attributes['movie_id'].split(',')]
+    p.attributes.pop('movie_id')
     if len(movie_ids) <= threshold:
       continue
     for mid in movie_ids:
@@ -48,6 +49,15 @@ def build_connections(movies, participants, role, threshold):
   for p in to_pop:
     participants.pop(p)
   return movies, participants
+
+
+def change_to_uniform_id(subjects, new_id):
+  new_subjects = {}
+  for old_id, v in subjects.items():
+    new_subjects[new_id] = v
+    v.id = new_id
+    new_id += 1
+  return new_subjects, new_id
 
 
 def load_participant(node_file, attributs):
@@ -108,6 +118,10 @@ def load_data():
   for m in movies.values():
     m.cast = m.attributes['cast_link']
     m.director = m.attributes['director_link']
+  new_id = 0
+  movies, new_id = change_to_uniform_id(movies, new_id)
+  actors, new_id = change_to_uniform_id(actors, new_id)
+  directors, new_id = change_to_uniform_id(directors, new_id)
   print('movies:', len(movies))
   print('actors:', len(actors))
   print('directors:', len(directors))
