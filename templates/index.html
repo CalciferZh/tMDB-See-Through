@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>tMDB-See-Through</title>
+        <link rel="icon" type="image/x-ico" href="../static/favicon.ico">
+        <link type="text/css" rel="stylesheet" href="../static/css/layout.css">
+        <meta charset="UTF-8">
+    </head>
+    <!-- <body style="overflow:hidden;"> -->
+    <script src="../static/js/lib/d3.min.js"></script>
+    <script src="../static/js/lib/request_dag.js"></script>
+
+    <script src="../static/js/DataLoader.js"></script>
+    <script src="../static/js/Layout.js"></script>
+    <script src="../static/js/main.js"></script>
+
+    <body>
+        <div style="display: flex; flex-direction:column; height: 100%;">
+            <div style="display:flex; flex-direction:row; flex: 1 0 85%;">
+                <div class="self-column" id="plot-column">
+                    <div class="self-row" id="time-windows" style="flex: 1 0 30%;display:flex; flex-direction: column;">
+                        <div class="view-header"><span class="my-panel-heading">Time window</span></div>
+                    </div>
+                    <div class="self-row" id="graph" style="flex: 1 0 65%;display:flex; flex-direction: column;">
+                        <div class="view-header"> <span class="my-panel-heading">Graph Layout</span><button type="button" class="btn" id="draw">Draw</button></div>
+                    </div>
+                </div>
+                <div class="self-column" class="vertical-split"></div>
+                <div class="self-column" id="config-and-detail-column">
+                    <div class="self-row" id="detail" style="flex: 1 0 40%;display:flex;flex-direction: column;">
+                        <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
+                    </div>
+                    <div class="self-row" id="list-row" style="flex: 1 0 50%;display:flex;flex-direction: column;">
+                        <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
+                        <div id="list" style="height:100%;overflow-y:auto; margin-top:1%;">
+                            <table class="table table-hover" id="detail ta" style="text-align:center">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Number of Samples</th>
+                                        <th>Avg Drift Degree</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drift-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

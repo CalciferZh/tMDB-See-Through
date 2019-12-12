@@ -1,5 +1,4 @@
-from flask import Flask
-from flask import request
+from flask import Flask, request, render_template
 from graph import MovieGraph
 from data import load_data
 
@@ -7,6 +6,10 @@ app = Flask(__name__)
 
 movies, actors, directors = load_data()
 graph = MovieGraph(movies, actors, directors)
+
+@app.route('/')
+def index():
+  return render_template("index.html")
 
 @app.route('/movies')
 def movies_api():
@@ -25,8 +28,8 @@ def directors_api():
 
 @app.route('/set_range', methods=['POST'])
 def set_range():
-  year_min = int(request.form['year_min'])
-  year_max = int(request.form['year_max'])
+  year_min = int(request.json['year_min'])
+  year_max = int(request.json['year_max'])
   graph.set_range(year_min, year_max)
   return 'OK', 200
 
@@ -36,6 +39,6 @@ def update_api():
   # if step is None, will use the default step with exponential decay
   step = None
   if request.method == 'POST':
-    step = request.form['step']
+    step = request.json['step']
   graph.update(step)
   return graph.export_positions()
