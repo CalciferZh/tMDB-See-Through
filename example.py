@@ -30,12 +30,6 @@ def draw_graph(nodes, edges, size, padding=0.1):
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
-
-  position_json = graph.export_positions()
-  with open('./position_json.json', 'w') as f:
-    f.write(position_json)
-  exit(0)
-
   graph.set_range(0, 9999)
   step = 1e-2
   decay = 0.99

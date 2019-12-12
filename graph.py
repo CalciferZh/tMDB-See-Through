@@ -26,6 +26,10 @@ class MovieGraph:
     np.random.seed(960822)
     self.positions_all = np.random.uniform(size=[self.N, 2])
 
+    self.default_step = 1e-2
+    self.current_step = self.default_step
+    self.default_decay = 0.99
+
     self.N_selected = None
     self.movies_selected = None
     self.actors_selected = None
@@ -36,6 +40,8 @@ class MovieGraph:
     self.id_selected_to_uniform = None
 
   def set_range(self, year_min, year_max):
+    self.current_step = self.default_step
+
     self.id_selected_to_uniform = {}
     self.id_uniform_to_selected = {}
     self.N_selected = 0
@@ -87,7 +93,10 @@ class MovieGraph:
         ])
     self.edges_selected = np.array(self.edges_selected, dtype=np.int32)
 
-  def update(self, step):
+  def update(self, step=None):
+    if step is None:
+      step = self.current_step
+      self.current_step *= self.decay
     update_layout(self.positions_selected, self.edges_selected, step)
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
