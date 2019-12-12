@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib as plt
+import json
 from tqdm import tqdm
 from math_utils import *
 
@@ -92,3 +93,22 @@ class MovieGraph:
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
     return self.positions_all
+
+  def export_movies(self):
+    s = json.dumps({k: v.attributes for k, v in self.movies.items()})
+    return s
+
+  def export_actors(self):
+    s = json.dumps({k: v.attributes for k, v in self.actors.items()})
+    return s
+
+  def export_directors(self):
+    s = json.dumps({k: v.attributes for k, v in self.directors.items()})
+    return s
+
+  def export_positions(self):
+    s = json.dumps(
+      {k: [self.positions_all[k][0], self.positions_all[k][1]] \
+        for k in range(self.N)}
+    )
+    return s

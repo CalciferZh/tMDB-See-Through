@@ -117,7 +117,9 @@ def load_data():
     build_connections(movies, directors, 'director_link', DIRECTOR_MOVIE_THRES)
   for m in movies.values():
     m.cast = m.attributes['cast_link']
+    m.attributes.pop('cast_link')
     m.director = m.attributes['director_link']
+    m.attributes.pop('director_link')
   new_id = 0
   movies, new_id = change_to_uniform_id(movies, new_id)
   actors, new_id = change_to_uniform_id(actors, new_id)

@@ -3,8 +3,8 @@ ACTOR_NODE_FILE = './data/castNode_simplified.csv'
 DIRECTOR_NODE_FILE = './data/directorNode.csv'
 
 MOVIE_ATTRIBUTES = {
-  'budget', 'genres', 'id', 'popularity', 'production_companies',
-  'production_countries', 'release_date', 'revenue', 'runtime', 'title',
+  'budget', 'genres', 'id', 'popularity',
+  'release_date', 'revenue', 'runtime', 'title',
   'tagline', 'vote_average', 'vote_count'
 }
 
