@@ -2,10 +2,10 @@ from flask import Flask, request, render_template
 from graph import MovieGraph
 from data import load_data
 
-app = Flask(__name__)
-
 movies, actors, directors = load_data()
 graph = MovieGraph(movies, actors, directors)
+
+app = Flask(__name__)
 
 @app.route('/')
 def index():
@@ -28,9 +28,9 @@ def directors_api():
 
 @app.route('/set_range', methods=['POST'])
 def set_range():
-  year_min = int(request.json['year_min'])
-  year_max = int(request.json['year_max'])
-  graph.set_range(year_min, year_max)
+  date_min = int(request.json['date_min'])
+  date_max = int(request.json['date_max'])
+  graph.set_range(date_min, date_max)
   return graph.export_selected_edges()
 
 

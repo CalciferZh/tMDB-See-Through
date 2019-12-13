@@ -30,10 +30,19 @@ def draw_graph(nodes, edges, size, padding=0.1):
   return canvas
 
 
+def set_range_speed_test():
+  movies, actors, directors = load_data()
+  graph = MovieGraph(movies, actors, directors)
+  for _ in tqdm(list(range(1000)), ascii=True):
+    date_min = np.random.randint(20050101)
+    date_max = np.random.randint(date_min, 20151231)
+    graph.set_range(date_min, date_max)
+
+
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
-  graph.set_range(0, 9999)
+  graph.set_range(0, 99999999)
   render_size = 512
 
   writer = VideoWriter('./layout.mp4', render_size, render_size, 60)
