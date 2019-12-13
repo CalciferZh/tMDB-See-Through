@@ -36,8 +36,11 @@ class MovieGraph:
     self.directors_selected = None
     self.positions_selected = None
     self.edges_selected = None
+    self.edges_selected_uniform_id = None
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
+
+    self.set_range(self.year_min, self.year_max)
 
   def set_range(self, year_min, year_max):
     self.current_step = self.default_step
@@ -82,12 +85,15 @@ class MovieGraph:
     ]
 
     self.edges_selected = []
+    self.edges_selected_uniform_id = []
     for m_id in self.movies_selected:
       for a in self.movies[m_id].cast.values():
+        self.edges_selected_uniform_id.append([m_id, a.id])
         self.edges_selected.append([
           self.id_uniform_to_selected[m_id], self.id_uniform_to_selected[a.id]
         ])
       for d in self.movies[m_id].director.values():
+        self.edges_selected_uniform_id.append([m_id, d.id])
         self.edges_selected.append([
           self.id_uniform_to_selected[m_id], self.id_uniform_to_selected[d.id]
         ])
@@ -120,4 +126,8 @@ class MovieGraph:
       {k: [self.positions_all[k][0], self.positions_all[k][1]] \
         for k in range(self.N)}
     )
+    return s
+
+  def export_selected_edges(self):
+    s = json.dumps(self.edges_selected_uniform_id)
     return s

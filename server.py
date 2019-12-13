@@ -31,7 +31,7 @@ def set_range():
   year_min = int(request.json['year_min'])
   year_max = int(request.json['year_max'])
   graph.set_range(year_min, year_max)
-  return 'OK', 200
+  return graph.export_selected_edges()
 
 
 @app.route('/update', methods=['GET', 'POST'])
