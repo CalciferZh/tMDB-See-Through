@@ -34,11 +34,7 @@ def set_range():
   return graph.export_selected_edges()
 
 
-@app.route('/update', methods=['GET', 'POST'])
+@app.route('/update', methods=['POST', 'GET'])
 def update_api():
-  # if step is None, will use the default step with exponential decay
-  step = None
-  if request.method == 'POST':
-    step = request.json['step']
-  graph.update(step)
+  graph.update()
   return graph.export_positions()

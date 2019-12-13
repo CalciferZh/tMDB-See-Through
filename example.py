@@ -3,6 +3,7 @@ from graph import MovieGraph
 from tqdm import tqdm
 import numpy as np
 import cv2
+import json
 from vctoolkit import VideoWriter
 from vctoolkit import imshow
 from vctoolkit import imresize
@@ -13,16 +14,18 @@ def draw_graph(nodes, edges, size, padding=0.1):
   padding = np.round(padding * size).astype(np.int32)
   canvas = np.ones([size + padding * 2, size + padding * 2, 3], dtype=np.uint8)
   canvas *= 255
-  nodes = np.round(nodes * size).astype(np.int32)
   for e in edges:
-    cv2.line(
-      canvas,
-      (nodes[e[0]][0] + padding, nodes[e[0]][1] + padding),
-      (nodes[e[1]][0] + padding, nodes[e[1]][1] + padding),
-      (0, 0, 255), r // 4
+    n1 = (
+      np.round(nodes[str(e[0])][0] * size + padding).astype(np.int32),
+      np.round(nodes[str(e[0])][1] * size + padding).astype(np.int32)
     )
-  for v in nodes:
-    cv2.circle(canvas, (v[0] + padding, v[1] + padding), r, (255, 0, 0), -1)
+    n2 = (
+      np.round(nodes[str(e[1])][0] * size + padding).astype(np.int32),
+      np.round(nodes[str(e[1])][1] * size + padding).astype(np.int32)
+    )
+    cv2.line(canvas, n1, n2, (0, 0, 255), r // 4)
+    cv2.circle(canvas, n1, r, (255, 0, 0), -1)
+    cv2.circle(canvas, n2, r, (255, 0, 0), -1)
   canvas = imresize(canvas, (size, size))
   return canvas
 
@@ -30,24 +33,16 @@ def draw_graph(nodes, edges, size, padding=0.1):
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
-  print(graph.year_min, graph.year_max)
   graph.set_range(0, 9999)
-  step = 1e-2
-  decay = 0.99
-  render_size = 2048
-
-  s = graph.export_selected_edges()
-  with open('edges_json.json', 'w') as f:
-    f.write(s)
-  exit(0)
+  render_size = 512
 
   writer = VideoWriter('./layout.mp4', render_size, render_size, 60)
 
   for _ in tqdm(list(range(1000)), ascii=True):
-    graph.update(step)
-    step *= decay
-    frame = \
-      draw_graph(graph.positions_selected, graph.edges_selected, render_size)
+    graph.update()
+    edges = json.loads(graph.export_selected_edges())
+    positions = json.loads(graph.export_positions())
+    frame = draw_graph(positions, edges, render_size)
     writer.write_frame(frame)
   writer.close()
 

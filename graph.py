@@ -102,12 +102,11 @@ class MovieGraph:
   def update(self, step=None):
     if step is None:
       step = self.current_step
-      self.current_step *= self.decay
+      self.current_step *= self.default_decay
     update_layout(self.positions_selected, self.edges_selected, step)
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
-    return self.positions_all
 
   def export_movies(self):
     s = json.dumps({k: v.attributes for k, v in self.movies.items()})
