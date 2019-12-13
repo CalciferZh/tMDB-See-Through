@@ -6,7 +6,7 @@ LayoutClass = function() {
   that.detail_div = d3.select("#detail");
   that.list_div = d3.select("#list");
 
-  that.graph_vars = {};
+  let graph_vars = {};
 
   that.draw_time_window = function() {
     let margin = { top: 10, right: 30, bottom: 30, left: 40 };
@@ -86,20 +86,19 @@ LayoutClass = function() {
   };
 
   that.init_graph = function() {
-    let margin = { top: 10, right: 30, bottom: 30, left: 60 },
-      width = 460 - margin.left - margin.right,
-      height = 400 - margin.top - margin.bottom;
+    let margin = { top: 10, right: 30, bottom: 30, left: 60 };
+    let width = that.graph_div.node().getBoundingClientRect().width - margin.left - margin.right;
+    let height = that.graph_div.node().getBoundingClientRect().height - margin.top - margin.bottom;
 
-    let svg = that.graph_div
+    graph_vars['svg'] = that.graph_div
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    that.graph_vars["svg"] = svg;
-    that.graph_vars["xScale"] = xScale;
-    that.graph_vars["yScale"] = yScale;
+    graph_vars['xScale'] = d3.scaleLinear().range([0, width]);
+    graph_vars['yScale'] = d3.scaleLinear().range([height, 0]);
 
     d3.select("#draw").on("click", () => {
       that.update_graph(100);
@@ -107,26 +106,25 @@ LayoutClass = function() {
   };
 
   that.update_single_graph = function() {
+    console.log("update_single_graph");
     DataLoader.get_coord(1, that.draw_single_graph);
   };
 
   that.draw_single_graph = function() {
-    let svg = that.graph_div.select("svg g");
+    let svg=graph_vars['svg'];
+    let xScale = graph_vars['xScale'];
+    let yScale = graph_vars['yScale'];
     let xs = DataLoader.data.map(d => d.x);
     let ys = DataLoader.data.map(d => d.x);
-    let x_min = Math.min(...xs);
-    let x_max = Math.max(...xs);
-    let y_min = Math.min(...ys);
-    let y_max = Math.min(...ys);
-    let xScale = d3
-      .scaleLinear()
-      .domain([x_min, x_max])
-      .range([0, width]);
+    let x_min = Math.min(-5, ...xs);
+    let x_max = Math.max(5, ...xs);
+    let y_min = Math.min(-5, ...ys);
+    let y_max = Math.max(5, ...ys);
 
-    let yScale = d3
-      .scaleLinear()
-      .domain([y_min, y_max])
-      .range([height, 0]);
+    console.log(xs[0],xs[10],ys[0],ys[10])
+    
+    xScale.domain([x_min, x_max])
+    yScale.domain([y_min, y_max])
 
     let points = svg.selectAll("circle").data(DataLoader.data, x => x.id);
 
