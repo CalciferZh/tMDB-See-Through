@@ -30,10 +30,17 @@ def draw_graph(nodes, edges, size, padding=0.1):
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
+  print(graph.year_min, graph.year_max)
   graph.set_range(0, 9999)
   step = 1e-2
   decay = 0.99
   render_size = 2048
+
+  s = graph.export_selected_edges()
+  with open('edges_json.json', 'w') as f:
+    f.write(s)
+  exit(0)
+
   writer = VideoWriter('./layout.mp4', render_size, render_size, 60)
 
   for _ in tqdm(list(range(1000)), ascii=True):
