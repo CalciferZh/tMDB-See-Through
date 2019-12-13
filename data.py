@@ -1,5 +1,6 @@
 import pandas
 from node import *
+import math
 from config import *
 from vctoolkit import pkl_save
 
@@ -94,6 +95,11 @@ def load_movie():
     if int(row['release_date'].split('-')[0]) < MOVIE_YEAR_THRES:
       continue
     movies[row['id']] = Movie(row)
+
+  for v in movies.values():
+    if type(v.attributes['tagline']) != str:
+      v.attributes['tagline'] = ''
+
   return movies
 
 
