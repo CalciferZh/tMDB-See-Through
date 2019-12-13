@@ -5,7 +5,7 @@ DIRECTOR_NODE_FILE = './data/directorNode.csv'
 MOVIE_ATTRIBUTES = {
   'budget', 'genres', 'id', 'popularity',
   'release_date', 'revenue', 'runtime', 'title',
-  'vote_average', 'vote_count'
+  'vote_average', 'vote_count', 'tagline'
 }
 
 MOVIE_POP_THRES = 90 # slightly less than 10% -> ~500 movies
@@ -15,3 +15,5 @@ DIRECTOR_MOVIE_THRES = 0
 
 ACTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 DIRECTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
+
+PKL_SAVE_PATH = './data/nodes_all_in_one.pkl'

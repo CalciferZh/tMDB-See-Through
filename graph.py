@@ -3,7 +3,7 @@ import cv2
 import matplotlib as plt
 import json
 from tqdm import tqdm
-from math_utils import *
+from layout import update_layout
 
 
 class MovieGraph:
@@ -15,9 +15,10 @@ class MovieGraph:
     np.random.seed(960822)
     self.positions_all = np.random.uniform(size=[self.N, 2])
 
-    self.default_step = 2e-3
-    self.current_step = self.default_step
-    self.default_decay = 1
+    self.max_step = 1e-2
+    self.min_step = 1e-4
+    self.current_step = self.max_step
+    self.decay = 0.99
 
     self.N_selected = None
     self.movies_selected = None
@@ -32,7 +33,7 @@ class MovieGraph:
     self.set_range(0, 99999999)
 
   def set_range(self, date_min, date_max):
-    self.current_step = self.default_step
+    self.current_step = min(self.max_step, self.current_step * 1.1)
 
     self.id_selected_to_uniform = {}
     self.id_uniform_to_selected = {}
@@ -91,12 +92,12 @@ class MovieGraph:
       return
     if step is None:
       step = self.current_step
-      self.current_step *= self.default_decay
-    update_layout(self.positions_selected, self.edges_selected, step)
+      self.current_step = max(self.current_step * self.decay, self.min_step)
+    self.positions_selected = \
+      update_layout(self.positions_selected, self.edges_selected, step)
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
-    self.positions_all = np.clip(self.positions_all, 0, 1)
 
   def export_movies(self):
     s = json.dumps({k: v.attributes for k, v in self.movies.items()})

@@ -32,7 +32,8 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            r: (Math.log(data[key].revenue) + data[key].vote_average) / 2,
+            // r: (Math.log(data[key].revenue) + data[key].vote_average) / 2,
+            r: 3,
           };
           that.movies[key] = data[key];
           that.movies[key]["release_date"] = that.parseDate(
@@ -59,7 +60,7 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            r: 3,
+            r: 9,
           };
           that.actors[key] = data[key];
         }
@@ -127,7 +128,7 @@ DataLoaderClass = function() {
     });
     node.set_data({
       date_min: range[0].getFullYear() * 10000 + (range[0].getMonth() + 1) * 100 + range[0].getDate(),
-      date_max: range[1].getFullYear() * 10000 + (range[1].getMonth() + 1) * 100 + range[1].getDate() 
+      date_max: range[1].getFullYear() * 10000 + (range[1].getMonth() + 1) * 100 + range[1].getDate()
     });
     node.notify();
   };

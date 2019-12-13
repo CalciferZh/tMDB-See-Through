@@ -1,8 +1,10 @@
 import pandas
 from node import *
+import os
 import math
 from config import *
 from vctoolkit import pkl_save
+from vctoolkit import pkl_load
 
 
 def build_connections(movies, participants, role, threshold):
@@ -116,9 +118,15 @@ def load_data():
   dict
     A dict of directors with id as keys.
   """
-  movies = load_movie()
-  actors = load_participant(ACTOR_NODE_FILE, ACTOR_ATTRIBUTES)
-  directors = load_participant(DIRECTOR_NODE_FILE, DIRECTOR_ATTRIBUTES)
+  if os.path.isfile(PKL_SAVE_PATH):
+    movies, actors, directors = pkl_load(PKL_SAVE_PATH)
+  else:
+    movies = load_movie()
+    actors = load_participant(ACTOR_NODE_FILE, ACTOR_ATTRIBUTES)
+    directors = load_participant(DIRECTOR_NODE_FILE, DIRECTOR_ATTRIBUTES)
+    pkl_save(PKL_SAVE_PATH, (movies, actors, directors))
+
+
   movies, actors = \
     build_connections(movies, actors, 'cast_link', ACTOR_MOVIE_THRES)
   movies, directors = \
