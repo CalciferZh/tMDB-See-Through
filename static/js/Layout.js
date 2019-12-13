@@ -74,12 +74,13 @@ LayoutClass = function() {
         [0, 0],
         [width, height]
       ])
-      .on("start brush", () => {})
-      .on("end", () => {
-        DataLoader.set_range([
-          xScale.invert(d3.event.selection[0]),
-          xScale.invert(d3.event.selection[1])
-        ]);
+      .on("start brush end", () => {
+        if (d3.event.selection && d3.event.selection[1] - d3.event.selection[0] > 100) {
+          DataLoader.set_range([
+            xScale.invert(d3.event.selection[0]),
+            xScale.invert(d3.event.selection[1])
+          ]);
+        }
       });
     let brush_g = svg.append("g").attr("class", "brush");
     brush_g.call(line_brush);
@@ -112,16 +113,13 @@ LayoutClass = function() {
       .domain([0, 1])
       .range([height, 0]);
 
-    d3.select("#draw").on("click", () => {
-      that.update_graph(500);
-    });
+    that.update_graph();
   };
 
-  that.update_graph = function(counter) {
-    if (counter == 0) return;
+  that.update_graph = function() {
     DataLoader.get_coord(() => {
       that.draw_single_graph();
-      that.update_graph(counter - 1);
+      that.update_graph();
     });
   };
 
