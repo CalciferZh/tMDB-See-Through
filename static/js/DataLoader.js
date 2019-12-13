@@ -12,7 +12,9 @@ DataLoaderClass = function() {
   that.update_url = "/update";
 
   // data
-  that.data = [];
+  that.edges = [];
+  that.points = [];
+  that.valid_points = [];
   that.movies = [];
   that.actors = [];
   that.directors = [];
@@ -23,16 +25,14 @@ DataLoaderClass = function() {
       data => {
         console.log("get_movies");
         for (let key in data) {
-          that.data[key] = {
+          that.points[key] = {
             id: key,
             type: "movie",
             color: that.color("movie"),
             valid: true,
             x: 0,
             y: 0,
-            other_info: {
-              connected_id: []
-            }
+            r: (Math.log(data[key].revenue) + data[key].vote_average) / 2,
           };
           that.movies[key] = data[key];
           that.movies[key]["release_date"] = that.parseDate(
@@ -40,7 +40,6 @@ DataLoaderClass = function() {
           );
         }
         Layout.draw_time_window();
-        that.set_range([new Date(1900, 0, 1), new Date(2100, 0, 1)]);
       },
       "json",
       "GET"
@@ -53,14 +52,14 @@ DataLoaderClass = function() {
       data => {
         console.log("get_actors");
         for (let key in data) {
-          that.data[key] = {
+          that.points[key] = {
             id: key,
             type: "actor",
             color: that.color("actor"),
             valid: true,
-            other_info: {
-              connected_id: []
-            }
+            x: 0,
+            y: 0,
+            r: 3,
           };
           that.actors[key] = data[key];
         }
@@ -76,18 +75,19 @@ DataLoaderClass = function() {
       data => {
         console.log("get_directors");
         for (let key in data) {
-          that.data[key] = {
+          that.points[key] = {
             id: key,
             type: "director",
             color: that.color("director"),
             valid: true,
-            other_info: {
-              connected_id: []
-            }
+            x: 0,
+            y: 0,
+            r: 3,
           };
           that.directors[key] = data[key];
         }
-        that.get_coord(10, () => {
+        that.set_range([new Date(1900, 0, 1), new Date(2100, 0, 1)]);
+        that.get_coord(() => {
           Layout.init_graph();
           Layout.draw_single_graph();
         });
@@ -109,6 +109,16 @@ DataLoaderClass = function() {
       that.set_range_url,
       data => {
         console.log("set_range");
+        that.edges = [];
+        for (let edge of data) {
+          that.edges.push({
+            'source': that.points[edge[0]],
+            'target': that.points[edge[1]],
+            'weight': 1,
+            'id': 100000 * edge[0] + edge[1], // a naive hash
+          })
+        }
+        that.set_valid();
       },
       "json",
       "POST"
@@ -123,41 +133,32 @@ DataLoaderClass = function() {
     node.notify();
   };
 
-  that.get_coord = function(step, callback) {
+  that.get_coord = function(callback) {
     let node = new request_node(
       that.update_url,
       data => {
         console.log("get_coord");
         for (let key in data) {
-          that.data[key].x = data[key][0];
-          that.data[key].y = data[key][1];
+          that.points[key].x = data[key][0];
+          that.points[key].y = data[key][1];
         }
         if (callback) callback();
       },
       "json",
-      "POST"
+      "GET"
     );
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
-    node.set_data({
-      step: step
-    });
     node.notify();
   };
 
-  that.set_valid = function(time_min, time_max) {
-    for (let d in that.data) {
-      if (d.type == "movie") {
-        let time = that.movies[d.id]["release_date"];
-        d.valid = time_min < time && time < time_max;
-      } else {
-        d.valid = true;
-      }
+  that.set_valid = function() {
+    for (let point of that.points) point.valid = false;
+    for (let edge of that.edges) {
+      edge.source.valid = true;
+      edge.target.valid = true;
     }
-  };
-
-  that.get_valid_data = function() {
-    return that.data.filter(d => d.valid);
+    that.valid_points = that.points.filter(d => d.valid);
   };
 };

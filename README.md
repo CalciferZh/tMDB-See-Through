@@ -10,3 +10,26 @@
 
 `$env:FLASK_APP = "server.py"`
 `flask run`
+
+### Data
+
+```json
+{
+    "movdie": {
+      "budget": 237000000, 
+      "tagline": "Enter the World of Pandora.", 
+      "runtime": 162.0, 
+      "popularity": 150.437577, 
+      "release_date": "2009-12-10", 
+      "vote_average": 7.2, 
+      "genres": "['Action', 'Adventure', 'Fantasy', 'Science Fiction']", 
+      "revenue": 2787965087, 
+      "vote_count": 11800, 
+      "title": "Avatar"
+    },
+    "actor/director": {
+      "gender": 2, 
+      "name": "Harrison Ford"
+    }
+}
+```
