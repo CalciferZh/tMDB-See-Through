@@ -2,7 +2,7 @@ DataLoaderClass = function() {
   let that = this;
 
   that.color = d3.scaleOrdinal(d3.schemeCategory10);
-  that.parseDate = d3.timeParse("%Y-%m-%d");
+  that.parseDate = d3.timeParse("%Y%m%d");
 
   // URL information
   that.get_movies_url = "/movies";
@@ -104,7 +104,6 @@ DataLoaderClass = function() {
   };
 
   that.set_range = function(range) {
-    that.set_valid(range[0], range[1]);
     let node = new request_node(
       that.set_range_url,
       data => {
@@ -127,8 +126,8 @@ DataLoaderClass = function() {
       "Content-Type": "application/json;charset=UTF-8"
     });
     node.set_data({
-      year_min: range[0].getFullYear(),
-      year_max: range[1].getFullYear()
+      date_min: range[0].getFullYear() * 10000 + (range[0].getMonth() + 1) * 100 + range[0].getDate(),
+      date_max: range[1].getFullYear() * 10000 + (range[1].getMonth() + 1) * 100 + range[1].getDate() 
     });
     node.notify();
   };
