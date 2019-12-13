@@ -4,6 +4,7 @@ import matplotlib as plt
 import json
 from tqdm import tqdm
 from layout import update_layout
+from config import *
 
 
 class MovieGraph:
@@ -20,6 +21,8 @@ class MovieGraph:
     self.current_step = self.max_step
     self.decay = 0.99
 
+    self.movie_half_life = 2592000 * 6 # months
+
     self.N_selected = None
     self.movies_selected = None
     self.actors_selected = None
@@ -30,7 +33,7 @@ class MovieGraph:
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
 
-    self.set_range(0, 99999999)
+    self.set_range(0, 1576243793)
 
   def set_range(self, date_min, date_max):
     self.current_step = min(self.max_step, self.current_step * 1.1)
@@ -39,9 +42,15 @@ class MovieGraph:
     self.id_uniform_to_selected = {}
     self.N_selected = 0
 
-    self.movies_selected = \
-      [m.id for m in self.movies.values() \
-        if m.date >= date_min and m.date <= date_max]
+    self.movies_selected = []
+    for m in self.movies.values():
+      if m.date < date_min:
+        m.size = 0.5 ** ((date_min - m.date) / self.movie_half_life)
+      elif m.date > date_max:
+        m.size = 0.5 ** ((m.date - date_max) / self.movie_half_life)
+      else:
+        m.size = 1
+        self.movies_selected.append(m.id)
 
     for m_id in self.movies_selected:
       self.id_selected_to_uniform[self.N_selected] = m_id
@@ -51,22 +60,20 @@ class MovieGraph:
     self.actors_selected = []
     for m_id in self.movies_selected:
       for a in self.movies[m_id].cast.values():
-        if a.id in self.id_uniform_to_selected.keys():
-          continue
-        self.id_selected_to_uniform[self.N_selected] = a.id
-        self.id_uniform_to_selected[a.id] = self.N_selected
-        self.actors_selected.append(a.id)
-        self.N_selected += 1
+        if a.id not in self.id_uniform_to_selected.keys():
+          self.id_selected_to_uniform[self.N_selected] = a.id
+          self.id_uniform_to_selected[a.id] = self.N_selected
+          self.actors_selected.append(a.id)
+          self.N_selected += 1
 
     self.directors_selected = []
     for m_id in self.movies_selected:
       for d in self.movies[m_id].director.values():
-        if d.id in self.id_uniform_to_selected.keys():
-          continue
-        self.id_selected_to_uniform[self.N_selected] = d.id
-        self.id_uniform_to_selected[d.id] = self.N_selected
-        self.directors_selected.append(d.id)
-        self.N_selected += 1
+        if d.id not in self.id_uniform_to_selected.keys():
+          self.id_selected_to_uniform[self.N_selected] = d.id
+          self.id_uniform_to_selected[d.id] = self.N_selected
+          self.directors_selected.append(d.id)
+          self.N_selected += 1
 
     self.positions_selected = self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
@@ -119,5 +126,29 @@ class MovieGraph:
     return s
 
   def export_selected_edges(self):
-    s = json.dumps(self.edges_selected_uniform_id)
-    return s
+    return self.edges_selected_uniform_id
+
+  def export_movie_sizes(self):
+    return {k: v.size for k, v in self.movies.items()}
+
+  def export_actor_scores(self):
+    data = {
+      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
+    }
+    for m in self.movies.values():
+      for x in m.cast.values():
+        for k in SCORE_ATTRIBUTES:
+          data[x.id][k] += m.size * m.attributes[k]
+
+    return data
+
+  def export_director_scores(self):
+    data = {
+      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
+    }
+    for m in self.movies.values():
+      for x in m.director.values():
+        for k in SCORE_ATTRIBUTES:
+          data[x.id][k] += m.size * m.attributes[k]
+
+    return data

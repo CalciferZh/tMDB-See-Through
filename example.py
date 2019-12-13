@@ -4,6 +4,8 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 import json
+import time
+import datetime
 from vctoolkit import VideoWriter
 from vctoolkit import imshow
 from vctoolkit import imresize
@@ -42,7 +44,24 @@ def set_range_speed_test():
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
-  graph.set_range(0, 99999999)
+  graph.set_range(
+    time.mktime(
+      datetime.datetime.strptime('20100101', '%Y%m%d').timetuple()
+    ),
+    time.mktime(
+      datetime.datetime.strptime('20140101', '%Y%m%d').timetuple()
+    )
+  )
+  data = {
+    'movie_sizes': graph.export_movie_sizes(),
+    'actor_scores': graph.export_actor_scores(),
+    'director_scores': graph.export_director_scores(),
+    'edges': graph.export_selected_edges()
+  }
+  s = json.dumps(data)
+  with open('./test.json', 'w') as f:
+    f.write(s)
+  exit(0)
   render_size = 512
 
   writer = VideoWriter('./layout.mp4', render_size, render_size, 60)
