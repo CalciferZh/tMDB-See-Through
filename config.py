@@ -8,7 +8,8 @@ MOVIE_ATTRIBUTES = {
   'tagline', 'vote_average', 'vote_count'
 }
 
-MOVIE_POP_THRES = 100 # slightly less than 10% -> ~500 movies
+MOVIE_POP_THRES = 90 # slightly less than 10% -> ~500 movies
+MOVIE_YEAR_THRES = 2005
 ACTOR_MOVIE_THRES = 10 # slightly less than 10% -> ~500 movies
 DIRECTOR_MOVIE_THRES = 0
 

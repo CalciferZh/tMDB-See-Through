@@ -12,23 +12,12 @@ class MovieGraph:
     self.actors = actors
     self.directors = directors
     self.N = len(self.movies) + len(self.actors) + len(self.directors)
-    self.year_min = 9999
-    self.year_max = -1
-    self.year_index = {}
-    for m in movies.values():
-      year = int(m.attributes['release_date'].split('-')[0])
-      if year in self.year_index.keys():
-        self.year_index[year].append(m)
-      else:
-        self.year_index[year] = [m]
-      self.year_max = max(year, self.year_max)
-      self.year_min = min(year, self.year_min)
     np.random.seed(960822)
     self.positions_all = np.random.uniform(size=[self.N, 2])
 
-    self.default_step = 1e-2
+    self.default_step = 2e-3
     self.current_step = self.default_step
-    self.default_decay = 0.99
+    self.default_decay = 1
 
     self.N_selected = None
     self.movies_selected = None
@@ -40,21 +29,19 @@ class MovieGraph:
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
 
-    self.set_range(self.year_min, self.year_max)
+    self.set_range(0, 99999999)
 
-  def set_range(self, year_min, year_max):
+  def set_range(self, date_min, date_max):
     self.current_step = self.default_step
 
     self.id_selected_to_uniform = {}
     self.id_uniform_to_selected = {}
     self.N_selected = 0
 
-    self.movies_selected = [
-      m.id for m in sum(
-        [v for k, v in self.year_index.items() if k >= year_min and k <= year_max],
-        []
-      )
-    ]
+    self.movies_selected = \
+      [m.id for m in self.movies.values() \
+        if m.date >= date_min and m.date <= date_max]
+
     for m_id in self.movies_selected:
       self.id_selected_to_uniform[self.N_selected] = m_id
       self.id_uniform_to_selected[m_id] = self.N_selected
@@ -100,6 +87,8 @@ class MovieGraph:
     self.edges_selected = np.array(self.edges_selected, dtype=np.int32)
 
   def update(self, step=None):
+    if self.positions_selected.shape[0] <= 0:
+      return
     if step is None:
       step = self.current_step
       self.current_step *= self.default_decay
@@ -107,6 +96,7 @@ class MovieGraph:
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
+    self.positions_all = np.clip(self.positions_all, 0, 1)
 
   def export_movies(self):
     s = json.dumps({k: v.attributes for k, v in self.movies.items()})

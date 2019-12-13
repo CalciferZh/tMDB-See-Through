@@ -91,6 +91,8 @@ def load_movie():
     row = d[1].to_dict()
     if row['popularity'] < MOVIE_POP_THRES:
       continue
+    if int(row['release_date'].split('-')[0]) < MOVIE_YEAR_THRES:
+      continue
     movies[row['id']] = Movie(row)
   return movies
 

@@ -44,7 +44,7 @@ def force_attractive(dist, area=1):
   return fa
 
 
-def update_layout(positions, edges, step, centralize=0.5, verbose=False):
+def update_layout(positions, edges, step, centralize=0.4, verbose=False):
   timer = Timer()
 
   timer.tic()
@@ -70,5 +70,4 @@ def update_layout(positions, edges, step, centralize=0.5, verbose=False):
   norm = np.linalg.norm(pos_disp, axis=-1, keepdims=True)
   norm += np.finfo(np.float32).eps
   positions += pos_disp / norm * np.minimum(norm, step)
-  positions = np.clip(positions, 0, 1)
   return positions
