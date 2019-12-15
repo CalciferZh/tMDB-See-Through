@@ -1,54 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <title>tMDB-See-Through</title>
-        <link rel="icon" type="image/x-ico" href="../static/favicon.ico">
-        <link type="text/css" rel="stylesheet" href="../static/css/layout.css">
-        <meta charset="UTF-8">
-    </head>
-    <!-- <body style="overflow:hidden;"> -->
-    <script src="../static/js/d3.min.js"></script>
-    <script src="../static/js/request_dag.js"></script>
+<head>
+    <title>tMDB-See-Through</title>
+    <link rel="icon" type="image/x-ico" href="../static/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="../static/css/layout.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+</head>
+<!-- <body style="overflow:hidden;"> -->
+<script src="../static/js/jquery-3.2.1.min.js"></script>
+<script src="../static/js/d3.min.js"></script>
+<script src="../static/js/request_dag.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
 
-    <script src="../static/js/DataLoader.js"></script>
-    <script src="../static/js/Layout.js"></script>
-    <script src="../static/js/main.js"></script>
+<script src="../static/js/DataLoader.js"></script>
+<script src="../static/js/Layout.js"></script>
+<script src="../static/js/main.js"></script>
 
-    <body>
-        <div style="display: flex; flex-direction:column; height: 100%;">
-            <div style="display:flex; flex-direction:row; flex: 1 0 85%;">
-                <div class="self-column" id="plot-column">
-                    <div class="self-row" id="time-windows" style="flex: 1 0 30%;display:flex; flex-direction: column;">
-                        <div class="view-header"><span class="my-panel-heading">Time window</span></div>
-                    </div>
-                    <div class="self-row" id="graph" style="flex: 1 0 65%;display:flex; flex-direction: column;">
-                        <div class="view-header"> <span class="my-panel-heading">Graph Layout</span></div>
-                    </div>
+<body>
+    <div style="display: flex; flex-direction:column; height: 100%;">
+        <div style="display:flex; flex-direction:row; flex: 1 0 85%;">
+            <div class="self-column" id="plot-column">
+                <div class="self-row" id="time-windows" style="flex: 1 0 20%;display:flex; flex-direction: column;">
+                    <div class="view-header"><span class="my-panel-heading">Time window</span></div>
                 </div>
-                <div class="self-column" class="vertical-split"></div>
-                <div class="self-column" id="config-and-detail-column">
-                    <div class="self-row" id="detail" style="flex: 1 0 40%;display:flex;flex-direction: column;">
-                        <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
-                    </div>
-                    <div class="self-row" id="list-row" style="flex: 1 0 50%;display:flex;flex-direction: column;">
-                        <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
-                        <div id="list" style="height:100%;overflow-y:auto; margin-top:1%;">
-                            <table class="table table-hover" id="detail ta" style="text-align:center">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="drift-tbody">
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="self-row" id="graph" style="flex: 1 0 75%;display:flex; flex-direction: column;">
+                    <div class="view-header"> <span class="my-panel-heading">Graph Layout</span></div>
+                </div>
+            </div>
+            <div class="self-column" class="vertical-split"></div>
+            <div class="self-column" id="config-and-detail-column">
+                <div class="self-row" style="flex: 1 0 40%;display:flex;flex-direction: column;">
+                    <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
+                    <table class="table table-striped" id="detail-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="self-row" id="list-row" style="flex: 1 0 50%;display:flex;flex-direction: column;">
+                    <div class="view-header"><span class="my-panel-heading">Movie List</span><span
+                            class="my-panel-heading">Actor List</span></div>
+                    <div style="height:100%;overflow-y:auto; margin-top:1%;">
+                        <table class="table table-hover" id="list-table" style="text-align:center">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="list">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>
