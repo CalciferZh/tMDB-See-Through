@@ -18,6 +18,7 @@ DataLoaderClass = function() {
   that.movies = [];
   that.actors = [];
   that.directors = [];
+  that.pins = [];
 
   that.get_data = function(dataset) {
     let get_movies_node = new request_node(
@@ -25,6 +26,14 @@ DataLoaderClass = function() {
       data => {
         console.log("get_movies");
         for (let key in data) {
+          that.movies[key] = data[key];
+          that.movies[key].id = key;
+          that.movies[key]["release_date"] = new Date(
+            data[key]["release_date"] * 1000
+          );
+          that.movies[key]['popularity'] =  that.movies[key]['popularity'].toFixed(2);
+          that.movies[key]['vote_average'] =  that.movies[key]['vote_average'].toFixed(1);
+          that.movies[key]['name'] = that.movies[key]['title'];
           that.points[key] = {
             id: key,
             type: "movie",
@@ -32,13 +41,10 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            // r: (Math.log(data[key].revenue) + data[key].vote_average) / 2,
             r: 3,
+            adj: [],
+            info: that.movies[key],
           };
-          that.movies[key] = data[key];
-          that.movies[key]["release_date"] = that.parseDate(
-            data[key]["release_date"]
-          );
         }
         Layout.draw_time_window();
       },
@@ -53,6 +59,8 @@ DataLoaderClass = function() {
       data => {
         console.log("get_actors");
         for (let key in data) {
+          that.actors[key] = data[key];
+          that.actors[key].id = key;
           that.points[key] = {
             id: key,
             type: "actor",
@@ -61,8 +69,9 @@ DataLoaderClass = function() {
             x: 0,
             y: 0,
             r: 9,
+            adj: [],
+            info: that.actors[key],
           };
-          that.actors[key] = data[key];
         }
       },
       "json",
@@ -76,6 +85,8 @@ DataLoaderClass = function() {
       data => {
         console.log("get_directors");
         for (let key in data) {
+          that.directors[key] = data[key];
+          that.directors[key].id = key;
           that.points[key] = {
             id: key,
             type: "director",
@@ -84,14 +95,13 @@ DataLoaderClass = function() {
             x: 0,
             y: 0,
             r: 3,
+            adj: [],
+            info: that.directors[key]
           };
-          that.directors[key] = data[key];
         }
-        that.set_range([new Date(1900, 0, 1), new Date(2100, 0, 1)]);
-        that.get_coord(() => {
-          Layout.init_graph();
-          Layout.draw_single_graph();
-        });
+        that.set_range([new Date(1980, 0, 1), new Date(2020, 0, 1)]);
+        Layout.init_graph();
+        Layout.init_list();
       },
       "json",
       "GET"
@@ -105,20 +115,47 @@ DataLoaderClass = function() {
   };
 
   that.set_range = function(range) {
+    that.range = range;
     let node = new request_node(
       that.set_range_url,
       data => {
         console.log("set_range");
         that.edges = [];
-        for (let edge of data) {
-          that.edges.push({
-            'source': that.points[edge[0]],
-            'target': that.points[edge[1]],
-            'weight': 1,
-            'id': 100000 * edge[0] + edge[1], // a naive hash
-          })
+        for (let point of that.points) {
+          point.adj = [];
+        }
+        for (let key in data.movie_sizes) {
+          that.points[key].r = data.movie_sizes[key] * 2;
+        }
+        for (let key in data.actor_scores) {
+          for (let attr in data.actor_scores[key]) {
+            that.actors[key][attr] = data.actor_scores[key][attr];
+          }
+          if ('popularity' in data.actor_scores[key]) that.actors[key]['popularity'] =  that.actors[key]['popularity'].toFixed(2);
+          if ('vote_average' in data.actor_scores[key]) that.actors[key]['vote_average'] =  that.actors[key]['vote_average'].toFixed(1);
+          that.points[key].r = that.get_actor_size(that.actors[key]);
+        }
+        for (let key in data.director_scores) {
+          for (let attr in data.director_scores[key]) {
+            that.directors[key][attr] = data.director_scores[key][attr];
+          }
+          if ('popularity' in data.director_scores[key]) that.directors[key]['popularity'] =  that.directors[key]['popularity'].toFixed(2);
+          if ('vote_average' in data.director_scores[key]) that.directors[key]['vote_average'] =  that.directors[key]['vote_average'].toFixed(1);
+          that.points[key].r = that.get_director_size(that.directors[key]);
+        }
+        for (let _edge of data.edges) {
+          let edge = {
+            source: that.points[_edge[0]],
+            target: that.points[_edge[1]],
+            weight: 1,
+            id: 100000 * _edge[0] + _edge[1] // a naive hash
+          }
+          edge.source.adj.push(edge.target);
+          edge.target.adj.push(edge.source);
+          that.edges.push(edge);
         }
         that.set_valid();
+        Layout.update_list();
       },
       "json",
       "POST"
@@ -127,8 +164,8 @@ DataLoaderClass = function() {
       "Content-Type": "application/json;charset=UTF-8"
     });
     node.set_data({
-      date_min: range[0].getFullYear() * 10000 + (range[0].getMonth() + 1) * 100 + range[0].getDate(),
-      date_max: range[1].getFullYear() * 10000 + (range[1].getMonth() + 1) * 100 + range[1].getDate()
+      date_min: that.range[0].toISOString().substring(0, 10),
+      date_max: that.range[1].toISOString().substring(0, 10)
     });
     node.notify();
   };
@@ -145,10 +182,13 @@ DataLoaderClass = function() {
         if (callback) callback();
       },
       "json",
-      "GET"
+      "POST"
     );
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
+    });
+    node.set_data( {
+      'pins': that.pins,
     });
     node.notify();
   };
@@ -160,5 +200,33 @@ DataLoaderClass = function() {
       edge.target.valid = true;
     }
     that.valid_points = that.points.filter(d => d.valid);
+  };
+
+  that.get_actor_size = function(actor) {
+    return (
+      Math.sqrt(Math.log(actor.budget) / 10) + Math.sqrt(actor.popularity / 10)
+    );
+  };
+  that.get_director_size = function(director) {
+    return (
+      Math.sqrt(Math.log(director.budget) / 10) +
+      Math.sqrt(director.popularity / 10)
+    );
+  };
+  that.get_graph_info_about_man = function(man) {
+    let ret = {};
+    ret.movies = man.adj.map(movie => movie.id);
+    ret.collaborator = new Set();
+    for (let movie of man.adj) {
+      for (let _man of movie.adj) {
+        ret.collaborator.add(_man.id);
+      }
+    }
+    return ret;
+  };
+  that.get_graph_info_about_movie = function(movie) {
+    let ret = {};
+    ret.cast = movie.adj.map(man => man.id);
+    return ret;
   };
 };

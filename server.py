@@ -34,10 +34,10 @@ def directors_api():
 @app.route('/set_range', methods=['POST'])
 def set_range():
   date_min = time.mktime(
-    datetime.datetime.strptime(request.json['date_min'], '%Y%m%d').timetuple()
+    datetime.datetime.strptime(request.json['date_min'], '%Y-%m-%d').timetuple()
   )
   date_max = time.mktime(
-    datetime.datetime.strptime(request.json['date_max'], '%Y%m%d').timetuple()
+    datetime.datetime.strptime(request.json['date_max'], '%Y-%m-%d').timetuple()
   )
   graph.set_range(date_min, date_max)
   data = {

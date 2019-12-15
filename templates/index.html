@@ -6,6 +6,7 @@
     <link rel="icon" type="image/x-ico" href="../static/favicon.ico">
     <link type="text/css" rel="stylesheet" href="../static/css/layout.css">
     <link type="text/css" rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="../static/css/bootstrap-table.min.css">
     <meta charset="UTF-8">
 </head>
 <!-- <body style="overflow:hidden;"> -->
@@ -13,6 +14,7 @@
 <script src="../static/js/d3.min.js"></script>
 <script src="../static/js/request_dag.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
+<script src="../static/js/bootstrap-table.min.js"></script>
 
 <script src="../static/js/DataLoader.js"></script>
 <script src="../static/js/Layout.js"></script>
@@ -25,20 +27,19 @@
                 <div class="self-row" id="time-windows" style="flex: 1 0 20%;display:flex; flex-direction: column;">
                     <div class="view-header"><span class="my-panel-heading">Time window</span></div>
                 </div>
-                <div class="self-row" id="graph" style="flex: 1 0 75%;display:flex; flex-direction: column;">
+                <div class="self-row" id="graph" style="flex: 1 0 60%;display:flex; flex-direction: column;">
                     <div class="view-header"> <span class="my-panel-heading">Graph Layout</span></div>
                 </div>
             </div>
             <div class="self-column" class="vertical-split"></div>
             <div class="self-column" id="config-and-detail-column">
-                <div class="self-row" style="flex: 1 0 40%;display:flex;flex-direction: column;">
+                <div class="self-row" style="flex: 1 0 32%;display:flex;flex-direction: column;">
                     <div class="view-header"><span class="my-panel-heading">Details about the movie</span></div>
                     <table class="table table-striped" id="detail-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
+                                <th style="width: 40%">Attribute</th>
+                                <th style="width: 60%">Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -46,21 +47,10 @@
                     </table>
                 </div>
                 <div class="self-row" id="list-row" style="flex: 1 0 50%;display:flex;flex-direction: column;">
-                    <div class="view-header"><span class="my-panel-heading">Movie List</span><span
-                            class="my-panel-heading">Actor List</span></div>
-                    <div style="height:100%;overflow-y:auto; margin-top:1%;">
-                        <table class="table table-hover" id="list-table" style="text-align:center">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Info</th>
-                                </tr>
-                            </thead>
-                            <tbody id="list">
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="view-header"><span class="my-panel-heading" id="movie-tab">Movie List</span>
+                        <span class="my-panel-heading" id="actor-tab">Actor List</span>
+                    <span class="my-panel-heading" id="director-tab">Director List</span></div>
+                    <table id="table-list"></table>
                 </div>
             </div>
         </div>

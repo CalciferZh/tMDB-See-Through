@@ -32,7 +32,7 @@ body {
 }
 
 #config-and-detail-column {
-    width: 23%;
+    width: 24%;
 }
 
 .vertical-split {
@@ -110,7 +110,7 @@ body {
     border-radius: 0px 0px 8px 8px; */
     -ms-border-radius: 8px 8px 0px 0px;
     border-radius: 8px 8px 0px 0px;
-    font-size: 18px;
+    font-size: 20px;
 }
 
 .my-panel-seg {
@@ -178,7 +178,7 @@ span.badge {
 }
 
 .td {
-    text-align: center
+    text-align: center;
 }
 
 span.btn-text {
@@ -271,4 +271,12 @@ info:not(:disabled):not(.disabled).active,
 
 .bootstrap-select {
     margin-right: 25px;
+}
+
+th, td {
+    font-size: 16px;
+}
+
+.bootstrap-table {
+    padding: 5px;
 }
