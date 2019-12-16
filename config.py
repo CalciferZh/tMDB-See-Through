@@ -17,7 +17,8 @@ ACTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 DIRECTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 
 SCORE_ATTRIBUTES = [
-  'budget', 'popularity', 'revenue', 'runtime', 'vote_average', 'vote_count'
+  'budget', 'popularity', 'revenue', 'runtime', 'vote_average', 'vote_count',
+  'movie_count'
 ]
 
 PKL_SAVE_PATH = './data/nodes_all_in_one.pkl'

@@ -14,7 +14,8 @@ class Movie:
       ).timetuple()
     )
     self.attributes['release_date'] = self.date
-    self.size = 1.0
+    self.attributes['movie_count'] = 1 # a trick for average calculation
+    self.weight = 1.0
 
     self.director = {}
     self.cast = {}

@@ -48,11 +48,11 @@ class MovieGraph:
     self.movies_selected = []
     for m in self.movies.values():
       if m.date < date_min:
-        m.size = 0.5 ** ((date_min - m.date) / self.movie_half_life)
+        m.weight = 0.5 ** ((date_min - m.date) / self.movie_half_life)
       elif m.date > date_max:
-        m.size = 0.5 ** ((m.date - date_max) / self.movie_half_life)
+        m.weight = 0.5 ** ((m.date - date_max) / self.movie_half_life)
       else:
-        m.size = 1
+        m.weight = 1
         self.movies_selected.append(m.id)
 
     for m_id in self.movies_selected:
@@ -141,7 +141,7 @@ class MovieGraph:
     return self.edges_selected_uniform_id
 
   def export_movie_weights(self):
-    return {k: v.size for k, v in self.movies.items()}
+    return {k: v.weight for k, v in self.movies.items()}
 
   def export_actor_scores(self):
     data = {
@@ -150,7 +150,9 @@ class MovieGraph:
     for m in self.movies.values():
       for x in m.cast.values():
         for k in SCORE_ATTRIBUTES:
-          data[x.id][k] += m.size * m.attributes[k]
+          data[x.id][k] += m.weight * m.attributes[k]
+    for v in data.values():
+      v.attributes['vote_average'] /= v.atttributes['movie_count']
 
     return data
 
@@ -161,6 +163,6 @@ class MovieGraph:
     for m in self.movies.values():
       for x in m.director.values():
         for k in SCORE_ATTRIBUTES:
-          data[x.id][k] += m.size * m.attributes[k]
+          data[x.id][k] += m.weight * m.attributes[k]
 
     return data
