@@ -20,7 +20,7 @@
 
 ```json
 {
-    "movdie": {
+    "movie": {
       "budget": 237000000,
       "tagline": "Enter the World of Pandora.",
       "runtime": 162.0,
