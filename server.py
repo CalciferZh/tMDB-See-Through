@@ -51,5 +51,8 @@ def set_range():
 
 @app.route('/update', methods=['POST', 'GET'])
 def update_api():
+  pin_points = request.json['pins']
+  pin_point = pin_points[0] if len(pin_points) > 0 else None
+  # pin_point could be None or {'id': '254', 'x': 0.0181312593019319, 'y': 0.01816600988239863}
   graph.update()
   return graph.export_positions()
