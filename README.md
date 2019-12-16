@@ -2,6 +2,7 @@
 
 ### Usage
 
+0. Make a folder called `data` and all `.csv` files under it.
 1. Install the requirements - just pip install it if you cannot find a module.
 2. Open terminal and cd to this folder.
 3. For Mac: `export FLASK_APP=server.py`; for Windows: `$env:FLASK_APP = "server.py"`
