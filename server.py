@@ -40,8 +40,10 @@ def set_range():
     datetime.datetime.strptime(request.json['date_max'], '%Y-%m-%d').timetuple()
   )
   graph.set_range(date_min, date_max)
+  # NOTE: movie_sizes -> movie_weights, code in js is already changed
+  # use this for transparency
   data = {
-    'movie_sizes': graph.export_movie_sizes(),
+    'movie_weights': graph.export_movie_weights(),
     'actor_scores': graph.export_actor_scores(),
     'director_scores': graph.export_director_scores(),
     'edges': graph.export_selected_edges()
@@ -51,8 +53,19 @@ def set_range():
 
 @app.route('/update', methods=['POST', 'GET'])
 def update_api():
-  pin_points = request.json['pins']
-  pin_point = pin_points[0] if len(pin_points) > 0 else None
-  # pin_point could be None or {'id': '254', 'x': 0.0181312593019319, 'y': 0.01816600988239863}
   graph.update()
   return graph.export_positions()
+
+# check Notion notebook for more details of the pin/unpin design
+
+@app.route('/pin', methods=['POST'])
+def pin_api():
+  pin_id = request.json['pin']
+  graph.pin(pin_id)
+  return 'OK', 200
+
+
+@app.route('/unpin', methods=['GET'])
+def unpin_api():
+  graph.unpin()
+  return 'OK', 200

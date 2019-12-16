@@ -124,8 +124,8 @@ DataLoaderClass = function() {
         for (let point of that.points) {
           point.adj = [];
         }
-        for (let key in data.movie_sizes) {
-          that.points[key].r = data.movie_sizes[key] * 2;
+        for (let key in data.movie_weights) {
+          that.points[key].r = data.movie_weights[key] * 2;
         }
         for (let key in data.actor_scores) {
           for (let attr in data.actor_scores[key]) {

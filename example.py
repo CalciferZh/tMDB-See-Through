@@ -53,7 +53,7 @@ def graph_usage_example():
     )
   )
   data = {
-    'movie_sizes': graph.export_movie_sizes(),
+    'movie_weights': graph.export_movie_weights(),
     'actor_scores': graph.export_actor_scores(),
     'director_scores': graph.export_director_scores(),
     'edges': graph.export_selected_edges()

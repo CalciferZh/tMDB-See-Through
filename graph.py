@@ -33,6 +33,9 @@ class MovieGraph:
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
 
+    self.pin_id = None
+    self.pin_pos
+
     self.set_range(0, 1576243793)
 
   def set_range(self, date_min, date_max):
@@ -94,6 +97,13 @@ class MovieGraph:
         ])
     self.edges_selected = np.array(self.edges_selected, dtype=np.int32)
 
+  def pin(self, node_id):
+    self.pin_id = node_id
+    self.pin_pos = self.positions_all[node_id].copy()
+
+  def unpin(self):
+    self.pin_id = None
+
   def update(self, step=None):
     if self.positions_selected.shape[0] <= 0:
       return
@@ -105,6 +115,8 @@ class MovieGraph:
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
+    if self.pin_id is not None:
+      self.positions_all[self.pin_id] = self.pin_pos.copy()
 
   def export_movies(self):
     s = json.dumps({k: v.attributes for k, v in self.movies.items()})
@@ -128,7 +140,7 @@ class MovieGraph:
   def export_selected_edges(self):
     return self.edges_selected_uniform_id
 
-  def export_movie_sizes(self):
+  def export_movie_weights(self):
     return {k: v.size for k, v in self.movies.items()}
 
   def export_actor_scores(self):
