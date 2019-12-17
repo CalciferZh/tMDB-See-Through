@@ -5,7 +5,7 @@ from config import *
 import matplotlib.pyplot as plt
 
 
-def movie_inspect():
+def movie_popularity_inspect():
   data = np.array(pandas.read_csv(MOVIE_NODE_FILE)['popularity'])
   threshold = np.percentile(data, 90)
   print(threshold)
@@ -13,6 +13,18 @@ def movie_inspect():
   plt.savefig('movie_popularity.png')
   plt.title('Movie Popularity Distribution')
   plt.xlabel('popularity')
+  plt.ylabel('count')
+  plt.show()
+
+
+def movie_vote_count_inspect():
+  data = np.array(pandas.read_csv(MOVIE_NODE_FILE)['vote_count'])
+  threshold = np.percentile(data, 90)
+  print(threshold)
+  plt.hist(data, bins=500)
+  plt.savefig('movie_vote_count.png')
+  plt.title('Movie Vote Count Distribution')
+  plt.xlabel('vote_count')
   plt.ylabel('count')
   plt.show()
 
@@ -48,4 +60,4 @@ def genre_inspect():
 
 
 if __name__ == '__main__':
-  genre_inspect()
+  movie_vote_count_inspect()

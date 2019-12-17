@@ -9,7 +9,8 @@ MOVIE_ATTRIBUTES = {
 }
 
 MOVIE_POP_THRES = 90 # slightly less than 10% -> ~500 movies
-MOVIE_YEAR_THRES = 2005
+MOVIE_VOTE_CNT_THRES = 3000 # slightly more than 10% -> ~500 movies
+MOVIE_YEAR_THRES = 1999
 ACTOR_MOVIE_THRES = 10 # slightly less than 10% -> ~500 movies
 DIRECTOR_MOVIE_THRES = 0
 
@@ -18,7 +19,7 @@ DIRECTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 
 SCORE_ATTRIBUTES = [
   'budget', 'popularity', 'revenue', 'runtime', 'vote_average', 'vote_count',
-  'movie_count'
+  'movie_count' # trick
 ]
 
 GENRES = [

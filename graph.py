@@ -21,7 +21,7 @@ class MovieGraph:
       [0, 0.5], [1, 0.5],
       [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
       [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
-    ])
+    ]) * 2
 
     self.max_step = 1e-2
     self.min_step = 1e-4

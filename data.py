@@ -92,8 +92,9 @@ def load_movie():
   movies = {}
   for d in data.iterrows():
     row = d[1].to_dict()
-    if row['popularity'] < MOVIE_POP_THRES:
+    if row['vote_count'] < MOVIE_VOTE_CNT_THRES:
       continue
+    # handle timestamp problem
     if int(row['release_date'].split('-')[0]) < MOVIE_YEAR_THRES:
       continue
     movies[row['id']] = Movie(row)
