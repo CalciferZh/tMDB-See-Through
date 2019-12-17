@@ -1,5 +1,6 @@
 import pandas
 import numpy as np
+import ast
 from config import *
 import matplotlib.pyplot as plt
 
@@ -29,5 +30,22 @@ def actor_inspect():
   plt.show()
 
 
+def genre_inspect():
+  data = pandas.read_csv(MOVIE_NODE_FILE)['genres']
+  genre_cnt = {}
+  for r in data:
+    for g in ast.literal_eval(r):
+      if g in genre_cnt.keys():
+        genre_cnt[g] += 1
+      else:
+        genre_cnt[g] = 1
+
+  for x in list(sorted(genre_cnt.items(), key=lambda x: x[1])):
+    print(x)
+
+  plt.pie(list(genre_cnt.values()), labels=list(genre_cnt.keys()))
+  plt.show()
+
+
 if __name__ == '__main__':
-  actor_inspect()
+  genre_inspect()

@@ -44,32 +44,58 @@ def force_attractive(dist):
   return fa
 
 
-def update_layout(positions, edges, step, gravity=0.2, verbose=False):
-  n_points = positions.shape[0]
-  n_edges = edges.shape[0]
+def update_layout(positions, edges, anchors, anchor_edges, step, anchor_strength=1.0):
+  """
+  Update graph layout with node positions and virtual nodes (anchors).
 
+  Parameters
+  ----------
+  positions : np.ndarray
+    Node positions.
+  edges : np.ndarray
+    Node edges.
+  anchors : np.ndarray
+    Anchor positions.
+  anchor_edges : np.ndarray
+    Edges from nodes to anchors. The order should be (node_id, anchor_id).
+  step : float
+    Update step length.
+  anchor_strength : float
+    Anchor attractive force strength.
+
+  Returns
+  -------
+  np.ndarray
+    Updated node positions.
+  """
   delta = np.expand_dims(positions, 0) - np.expand_dims(positions, 1)
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps # avoid divide-by-zero
   pos_disp = np.sum(delta / dist * force_repulsive(dist), axis=1)
 
-  # add a fake point
-  positions = np.concatenate([positions, np.array([[.5, .5]])], 0)
-
-  # attractive
-  e_start = positions[list(edges[:, 0]) + [n_points] * n_points]
-  e_end = positions[list(edges[:, 1]) + list(range(n_points))]
+  # attractive from other nodes
+  e_start = positions[edges[:, 0]]
+  e_end = positions[edges[:, 1]]
   delta = e_start - e_end
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps
   disp = delta / dist * force_attractive(dist)
-  for e, d in zip(edges, disp[:n_edges]):
+  for e, d in zip(edges, disp):
     pos_disp[e[0]] -= d
     pos_disp[e[1]] += d
-  pos_disp += disp[n_edges:] * gravity
+
+  # attractive from anchors
+  e_start = positions[anchor_edges[:, 0]]
+  e_end = anchors[anchor_edges[:, 1]]
+  delta = e_start - e_end
+  dist = np.linalg.norm(delta, axis=-1, keepdims=True)
+  dist += np.finfo(np.float32).eps
+  disp = delta / dist * force_attractive(dist) * anchor_strength
+  for e, d in zip(edges, disp):
+    pos_disp[e[0]] -= d
 
   # update
   norm = np.linalg.norm(pos_disp, axis=-1, keepdims=True)
   norm += np.finfo(np.float32).eps
-  positions = positions[:-1] + pos_disp / norm * np.minimum(norm, step)
+  positions += pos_disp / norm * np.minimum(norm, step)
   return positions

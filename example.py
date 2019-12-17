@@ -39,9 +39,16 @@ def set_range_speed_test():
     date_min = np.random.randint(20050101)
     date_max = np.random.randint(date_min, 20151231)
     graph.set_range(date_min, date_max)
+    data = {
+      'movie_weights': graph.export_movie_weights(),
+      'actor_scores': graph.export_actor_scores(),
+      'director_scores': graph.export_director_scores(),
+      'edges': graph.export_selected_edges()
+    }
+    json.dumps(data)
 
 
-def graph_usage_example():
+def graph_dump_data_test():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
   graph.set_range(
@@ -62,13 +69,26 @@ def graph_usage_example():
   with open('./test.json', 'w') as f:
     f.write(s)
   exit(0)
+
+
+def graph_usage_example():
+  movies, actors, directors = load_data()
+  graph = MovieGraph(movies, actors, directors)
+  graph.set_range(
+    time.mktime(
+      datetime.datetime.strptime('20050101', '%Y%m%d').timetuple()
+    ),
+    time.mktime(
+      datetime.datetime.strptime('20200101', '%Y%m%d').timetuple()
+    )
+  )
   render_size = 512
 
   writer = VideoWriter('./layout.mp4', render_size, render_size, 60)
 
   for _ in tqdm(list(range(1000)), ascii=True):
     graph.update()
-    edges = json.loads(graph.export_selected_edges())
+    edges = graph.export_selected_edges()
     positions = json.loads(graph.export_positions())
     frame = draw_graph(positions, edges, render_size)
     writer.write_frame(frame)
@@ -76,4 +96,4 @@ def graph_usage_example():
 
 
 if __name__ == '__main__':
-  graph_usage_example()
+  set_range_speed_test()

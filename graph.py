@@ -16,6 +16,13 @@ class MovieGraph:
     np.random.seed(960822)
     self.positions_all = np.random.uniform(size=[self.N, 2])
 
+    sqrt3 = np.sqrt(3)
+    self.genre_nodes = np.array([
+      [0, 0.5], [1, 0.5],
+      [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
+      [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
+    ])
+
     self.max_step = 1e-2
     self.min_step = 1e-4
     self.current_step = self.max_step
@@ -30,11 +37,11 @@ class MovieGraph:
     self.positions_selected = None
     self.edges_selected = None
     self.edges_selected_uniform_id = None
+    self.genre_edges_selected = None
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
 
     self.pin_id = None
-    self.pin_pos
 
     self.set_range(0, 1576243793)
 
@@ -97,6 +104,13 @@ class MovieGraph:
         ])
     self.edges_selected = np.array(self.edges_selected, dtype=np.int32)
 
+    self.genre_edges_selected = []
+    for m_id in self.movies_selected:
+      for g_id in self.movies[m_id].main_genres:
+        self.genre_edges_selected.append([m_id, g_id])
+    self.genre_edges_selected = \
+      np.array(self.genre_edges_selected, dtype=np.int32)
+
   def pin(self, node_id):
     self.pin_id = node_id
     self.pin_pos = self.positions_all[node_id].copy()
@@ -110,8 +124,11 @@ class MovieGraph:
     if step is None:
       step = self.current_step
       self.current_step = max(self.current_step * self.decay, self.min_step)
-    self.positions_selected = \
-      update_layout(self.positions_selected, self.edges_selected, step)
+    self.positions_selected = update_layout(
+      self.positions_selected, self.edges_selected,
+      self.genre_nodes, self.genre_edges_selected,
+      step
+    )
     self.positions_all[
       self.movies_selected + self.actors_selected + self.directors_selected
     ] = self.positions_selected
@@ -152,7 +169,7 @@ class MovieGraph:
         for k in SCORE_ATTRIBUTES:
           data[x.id][k] += m.weight * m.attributes[k]
     for v in data.values():
-      v.attributes['vote_average'] /= v.atttributes['movie_count']
+      v['vote_average'] /= v['movie_count']
 
     return data
 
