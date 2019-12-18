@@ -32,14 +32,6 @@ def directors_api():
   return graph.export_directors()
 
 
-@app.route('/all_edges')
-def all_edges_api():
-  # returns a dict, whose keys are participant (actor/director) ids, and values
-  # are a list of ids, including all the participants it ever collaborated with,
-  # plus all the movie ids it participated in
-  return graph.export_neighbors()
-
-
 @app.route('/set_range', methods=['POST'])
 def set_range():
   date_min = time.mktime(
@@ -70,10 +62,11 @@ def update_api():
 def pin_api():
   pin_id = int(request.json['pin'])
   graph.pin(pin_id)
-  return 'OK', 200
+  return graph.export_node_weights(), 200
 
 
 @app.route('/unpin', methods=['GET'])
 def unpin_api():
   graph.unpin()
-  return 'OK', 200
+  graph.set_range(graph.date_min, graph.date_max)
+  return graph.export_node_weights(), 200

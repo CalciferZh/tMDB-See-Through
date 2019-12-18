@@ -41,6 +41,8 @@ class MovieGraph:
     self.genre_edges_selected = None
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
+    self.date_min = None
+    self.data_max = None
     self.node_weights = {}
 
     self.pin_id = None
@@ -48,7 +50,20 @@ class MovieGraph:
 
     self.set_range(0, 1576243793)
 
+    self.related = {}
+    for m in self.movies.values():
+      for x in m.participants.values():
+        self.related[x.id] = set([m.id, x.id])
+      for a in m.participants.values():
+        for b in m.participants.values():
+          self.related[a.id].add(b.id)
+          self.related[b.id].add(a.id)
+
   def set_range(self, date_min, date_max):
+    self.date_min = date_min
+    self.date_max = date_max
+    self.date_mid = (self.date_max + self.date_min) / 2
+    self.window_size = (self.date_max - self.date_min) / 2
     self.current_step = min(self.max_step, self.current_step * 1.5)
 
     self.id_selected_to_uniform = {}
@@ -59,22 +74,21 @@ class MovieGraph:
     self.node_weights = {}
     for m in self.movies.values():
       if m.date < date_min:
-        self.node_weights[m.id] = \
-          0.5 ** ((date_min - m.date) / self.movie_half_life)
+        self.node_weights[m.id] = 0
       elif m.date > date_max:
-        self.node_weights[m.id] = \
-          0.5 ** ((m.date - date_max) / self.movie_half_life)
+        self.node_weights[m.id] = 0
       else:
-        self.node_weights[m.id] = 1
+        x = 1 - abs(m.date - self.date_mid) / self.window_size
+        self.node_weights[m.id] = np.log(x * (np.e ** 4 - 1) + 1) / 4
         self.movies_selected.append(m.id)
       for a in m.cast.values():
-        if a.id in self.node_weights:
+        if a.id in self.node_weights.keys():
           self.node_weights[a.id] = \
             max(self.node_weights[m.id], self.node_weights[a.id])
         else:
           self.node_weights[a.id] = self.node_weights[m.id]
       for d in m.directors.values():
-        if d.id in self.node_weights:
+        if d.id in self.node_weights.keys():
           self.node_weights[d.id] = \
             max(self.node_weights[m.id], self.node_weights[d.id])
         else:
@@ -108,10 +122,10 @@ class MovieGraph:
     ]
 
     self.actor_scores = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
+      a.id: {k: 1e-8 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
     }
     self.director_scores = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
+      a.id: {k: 1e-8 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
     }
     for m in self.movies.values():
       for x in m.cast.values():
@@ -124,9 +138,13 @@ class MovieGraph:
             self.node_weights[m.id] * m.attributes[k]
 
     for v in self.actor_scores.values():
-      v['vote_average'] /= v['movie_count']
+      for k in SCORE_ATTRIBUTES:
+        if k != 'movie_count':
+          v[k] /= v['movie_count']
     for v in self.director_scores.values():
-      v['vote_average'] /= v['movie_count']
+      for k in SCORE_ATTRIBUTES:
+        if k != 'movie_count':
+          v[k] /= v['movie_count']
 
     self.edges_selected = []
     self.edges_selected_uniform_id = []
@@ -153,6 +171,10 @@ class MovieGraph:
   def pin(self, node_id):
     self.pin_pos = self.positions_all[node_id].copy()
     self.pin_id = node_id
+    for m in self.movies.values():
+      if m.id not in self.related[self.pin_id]:
+        self.node_weights[m.id] = 0
+
 
   def unpin(self):
     self.pin_id = None
@@ -185,19 +207,6 @@ class MovieGraph:
   def export_directors(self):
     s = json.dumps({k: v.attributes for k, v in self.directors.items()})
     return s
-
-  def export_neighbors(self):
-    neighbors = {}
-    for m in self.movies.values():
-      for x in m.participants.values():
-        neighbors[x.id] = set([m.id])
-      for a in m.participants.values():
-        for b in m.participants.values():
-          neighbors[a.id].add(b.id)
-          neighbors[b.id].add(a.id)
-
-    neighbors = {k: list(v) for k, v in neighbors.items()}
-    return json.dumps(neighbors)
 
   def export_positions(self):
     s = json.dumps(
