@@ -79,7 +79,8 @@ class MovieGraph:
         self.node_weights[m.id] = 0
       else:
         x = 1 - abs(m.date - self.date_mid) / self.window_size
-        self.node_weights[m.id] = np.log(x * (np.e ** 4 - 1) + 1) / 4
+        s = 5
+        self.node_weights[m.id] = np.log(x * (np.e ** s - 1) + 1) / s
         self.movies_selected.append(m.id)
       for a in m.cast.values():
         if a.id in self.node_weights.keys():
