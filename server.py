@@ -43,7 +43,7 @@ def set_range():
   # NOTE: movie_sizes -> movie_weights, code in js is already changed
   # use this for transparency
   data = {
-    'movie_weights': graph.export_movie_weights(),
+    'node_weights': graph.export_node_weights(),
     'actor_scores': graph.export_actor_scores(),
     'director_scores': graph.export_director_scores(),
     'edges': graph.export_selected_edges()

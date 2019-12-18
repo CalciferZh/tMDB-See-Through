@@ -20,13 +20,12 @@ class Movie:
     self.attributes['genres'] = ast.literal_eval(self.attributes['genres'])
     self.main_genres = \
       [GENRES.index(g) for g in self.attributes['genres'] if g in GENRES]
-    self.weight = 1.0
 
-    self.director = {}
+    self.directors = {}
     self.cast = {}
 
   def crew(self):
-    return self.director + self.cast
+    return self.directors + self.cast
 
 
 class Participant:

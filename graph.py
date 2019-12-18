@@ -21,7 +21,7 @@ class MovieGraph:
       [0, 0.5], [1, 0.5],
       [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
       [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
-    ]) * 2
+    ])
 
     self.max_step = 1e-2
     self.min_step = 1e-4
@@ -40,6 +40,7 @@ class MovieGraph:
     self.genre_edges_selected = None
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
+    self.node_weights = {}
 
     self.pin_id = None
 
@@ -53,14 +54,29 @@ class MovieGraph:
     self.N_selected = 0
 
     self.movies_selected = []
+    self.node_weights = {}
     for m in self.movies.values():
       if m.date < date_min:
-        m.weight = 0.5 ** ((date_min - m.date) / self.movie_half_life)
+        self.node_weights[m.id] = \
+          0.5 ** ((date_min - m.date) / self.movie_half_life)
       elif m.date > date_max:
-        m.weight = 0.5 ** ((m.date - date_max) / self.movie_half_life)
+        self.node_weights[m.id] = \
+          0.5 ** ((m.date - date_max) / self.movie_half_life)
       else:
-        m.weight = 1
+        self.node_weights[m.id] = 1
         self.movies_selected.append(m.id)
+      for a_id in m.cast:
+        if a_id in self.node_weights:
+          self.node_weights[a_id] = \
+            max(self.node_weights[m.id], self.node_weights[a_id])
+        else:
+          self.node_weights[a_id] = self.node_weights[m.id]
+      for d_id in m.directors:
+        if d_id in self.node_weights:
+          self.node_weights[d_id] = \
+            max(self.node_weights[m.id], self.node_weights[d_id])
+        else:
+          self.node_weights[d_id] = self.node_weights[m.id]
 
     for m_id in self.movies_selected:
       self.id_selected_to_uniform[self.N_selected] = m_id
@@ -78,7 +94,7 @@ class MovieGraph:
 
     self.directors_selected = []
     for m_id in self.movies_selected:
-      for d in self.movies[m_id].director.values():
+      for d in self.movies[m_id].directors.values():
         if d.id not in self.id_uniform_to_selected.keys():
           self.id_selected_to_uniform[self.N_selected] = d.id
           self.id_uniform_to_selected[d.id] = self.N_selected
@@ -98,17 +114,18 @@ class MovieGraph:
     for m in self.movies.values():
       for x in m.cast.values():
         for k in SCORE_ATTRIBUTES:
-          self.actor_scores[x.id][k] += m.weight * m.attributes[k]
-      for x in m.director.values():
+          self.actor_scores[x.id][k] += \
+            self.node_weights[m.id] * m.attributes[k]
+      for x in m.directors.values():
         for k in SCORE_ATTRIBUTES:
-          self.director_scores[x.id][k] += m.weight * m.attributes[k]
+          self.director_scores[x.id][k] += \
+            self.node_weights[m.id] * m.attributes[k]
 
     for v in self.actor_scores.values():
       v['vote_average'] /= v['movie_count']
     for v in self.director_scores.values():
       v['vote_average'] /= v['movie_count']
 
-    self.edges_weights = []
     self.edges_selected = []
     self.edges_selected_uniform_id = []
     for m_id in self.movies_selected:
@@ -117,7 +134,7 @@ class MovieGraph:
         self.edges_selected.append([
           self.id_uniform_to_selected[m_id], self.id_uniform_to_selected[a.id]
         ])
-      for d in self.movies[m_id].director.values():
+      for d in self.movies[m_id].directors.values():
         self.edges_selected_uniform_id.append([m_id, d.id])
         self.edges_selected.append([
           self.id_uniform_to_selected[m_id], self.id_uniform_to_selected[d.id]
@@ -177,8 +194,8 @@ class MovieGraph:
   def export_selected_edges(self):
     return self.edges_selected_uniform_id
 
-  def export_movie_weights(self):
-    return {k: v.weight for k, v in self.movies.items()}
+  def export_node_weights(self):
+    return self.node_weights
 
   def export_actor_scores(self):
     return self.actor_scores
