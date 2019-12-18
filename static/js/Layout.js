@@ -136,7 +136,6 @@ LayoutClass = function() {
         graph_vars['yScale-back'] = graph_vars['yScale'];
       })
       .on("zoom", function() {
-        console.log(d3.event.transform);
         // graph_vars["svg"].attr("transform", d3.event.transform);
         graph_vars['xScale'] = d3.event.transform.rescaleX(graph_vars['xScale-back']);
         graph_vars['yScale'] = d3.event.transform.rescaleY(graph_vars['yScale-back'])
@@ -221,7 +220,7 @@ LayoutClass = function() {
       .attr("y2", d => d.target.cy)
       .style("stroke", "lightgray")
       .style("stroke-width", 1)
-      .style("stroke-opacity", d => d.opacity);
+      .style("stroke-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
 
     points.exit().remove();
     rects.exit().remove();
@@ -230,7 +229,7 @@ LayoutClass = function() {
       .attr("cx", d => d.cx)
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
-      .style("fill-opacity", d => d.opacity);
+      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
     d3.selectAll(".visiable-name")
       .attr("x", d => d.cx)
       .attr("y", d => d.cy);
@@ -239,7 +238,7 @@ LayoutClass = function() {
       .attr("y", d => d.cy - d.r / 2)
       .attr("width", d => d.r)
       .attr("height", d => d.r)
-      .style("fill-opacity", d => d.opacity);
+      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
 
     points
       .enter()
@@ -249,7 +248,7 @@ LayoutClass = function() {
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
       .style("fill", d => d.color)
-      .style("fill-opacity", d => d.opacity)
+      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity)
       .on("mouseover", that.on_mouseover)
       .on("mouseout", that.on_mouseout)
       .on("dblclick", that.pin)
@@ -257,7 +256,7 @@ LayoutClass = function() {
       .attr("class", "visiable-name")
       .attr("x", d => d.cx)
       .attr("y", d => d.cy)
-      .text(d => (d.r > 10 ? d.info.abbr : ""))
+      .text(d => (d.r > 1 ? d.info.abbr : ""))
       .attr("font-family", "sans-serif")
       .attr("font-size", "12px");
 
@@ -277,7 +276,7 @@ LayoutClass = function() {
   };
 
   that.on_mouseover = function(d) {
-    if (d.weight < 0.15) return;
+    if (d.weight < 0.05) return;
     that.draw_detail_table(d);
     let ids = [];
     if (d.type == "movie") {
@@ -287,14 +286,10 @@ LayoutClass = function() {
       let info = DataLoader.get_graph_info_about_man(d);
       ids = new Set([...info.movies, ...info.collaborator]);
     }
-    d3.selectAll(".point").style("fill-opacity", d =>
-      ids.has(d.id) ? that.highlight_point_opacity : d.opacity
-    );
-    d3.selectAll(".link").style("stroke-opacity", d =>
-      ids.has(d.source.id) && ids.has(d.target.id)
-        ? that.highlight_line_opacity
-        : d.opacity
-    );
+    d3.selectAll(".point").each(d => d.highlighted = ids.has(d.id));
+    d3.selectAll(".link").each(d => d.highlighted = ids.has(d.source.id) && ids.has(d.target.id));
+    d3.selectAll(".point").style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+    d3.selectAll(".link").style("stroke-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
   };
 
   that.pin = function(d) {
@@ -303,6 +298,8 @@ LayoutClass = function() {
   };
 
   that.on_mouseout = function(d) {
+    d3.selectAll(".point").each(d => d.highlighted = false);
+    d3.selectAll(".link").each(d => d.highlighted = false);
     d3.selectAll(".point").style("fill-opacity", d => d.opacity);
     d3.selectAll(".link").style("stroke-opacity", d => d.opacity);
   };
