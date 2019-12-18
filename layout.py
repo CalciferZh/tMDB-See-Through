@@ -45,7 +45,7 @@ def force_attractive(dist):
 
 
 def update_layout(positions, edges, anchors, anchor_edges, step,
-                  anchor_strength=1.0, density=0.05):
+                  anchor_strength=1.0, density=1.0):
   """
   Update graph layout with node positions and virtual nodes (anchors).
 
@@ -75,6 +75,7 @@ def update_layout(positions, edges, anchors, anchor_edges, step,
   delta = np.expand_dims(positions, 0) - np.expand_dims(positions, 1)
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps # avoid divide-by-zero
+  # repulsive
   pos_disp = np.sum(delta / dist * force_repulsive(dist), axis=1) / density
 
   # attractive from other nodes
@@ -95,7 +96,7 @@ def update_layout(positions, edges, anchors, anchor_edges, step,
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps
   disp = delta / dist * force_attractive(dist) * anchor_strength
-  for e, d in zip(edges, disp):
+  for e, d in zip(anchor_edges, disp):
     pos_disp[e[0]] -= d
 
   # update

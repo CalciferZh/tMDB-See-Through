@@ -16,17 +16,18 @@ class MovieGraph:
     np.random.seed(960822)
     self.positions_all = np.random.uniform(size=[self.N, 2])
 
-    sqrt3 = np.sqrt(3)
-    self.genre_nodes = np.array([
-      [0, 0.5], [1, 0.5],
-      [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
-      [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
-    ])
+    # sqrt3 = np.sqrt(3)
+    # self.genre_nodes = np.array([
+    #   [0, 0.5], [1, 0.5],
+    #   [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
+    #   [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
+    # ])
+    self.genre_nodes = np.array([[0.5, 0.5]])
 
     self.max_step = 1e-2
-    self.min_step = 1e-4
+    self.min_step = 2e-4
     self.current_step = self.max_step
-    self.decay = 0.995
+    self.decay = 0.99
 
     self.movie_half_life = 2592000 * 6 # months
 
@@ -43,11 +44,12 @@ class MovieGraph:
     self.node_weights = {}
 
     self.pin_id = None
+    self.pin_pos = None
 
     self.set_range(0, 1576243793)
 
   def set_range(self, date_min, date_max):
-    self.current_step = min(self.max_step, self.current_step * 1.1)
+    self.current_step = min(self.max_step, self.current_step * 1.5)
 
     self.id_selected_to_uniform = {}
     self.id_uniform_to_selected = {}
@@ -116,12 +118,10 @@ class MovieGraph:
         for k in SCORE_ATTRIBUTES:
           self.actor_scores[x.id][k] += \
             self.node_weights[m.id] * m.attributes[k]
-        self.actor_scores[x.id]['movie_count'] += self.node_weights[m.id]
       for x in m.directors.values():
         for k in SCORE_ATTRIBUTES:
           self.director_scores[x.id][k] += \
             self.node_weights[m.id] * m.attributes[k]
-        self.director_scores[x.id]['movie_count'] += self.node_weights[m.id]
 
     for v in self.actor_scores.values():
       v['vote_average'] /= v['movie_count']
@@ -146,13 +146,13 @@ class MovieGraph:
     self.genre_edges_selected = []
     for m_id in self.movies_selected:
       for g_id in self.movies[m_id].main_genres:
-        self.genre_edges_selected.append([m_id, g_id])
+        self.genre_edges_selected.append([self.id_uniform_to_selected[m_id], g_id])
     self.genre_edges_selected = \
       np.array(self.genre_edges_selected, dtype=np.int32)
 
   def pin(self, node_id):
-    self.pin_id = node_id
     self.pin_pos = self.positions_all[node_id].copy()
+    self.pin_id = node_id
 
   def unpin(self):
     self.pin_id = None

@@ -60,7 +60,7 @@ def update_api():
 
 @app.route('/pin', methods=['POST'])
 def pin_api():
-  pin_id = request.json['pin']
+  pin_id = int(request.json['pin'])
   graph.pin(pin_id)
   return 'OK', 200
 
