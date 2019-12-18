@@ -225,40 +225,21 @@ LayoutClass = function() {
     points.exit().remove();
     rects.exit().remove();
 
-    points
-      .attr("cx", d => d.cx)
-      .attr("cy", d => d.cy)
-      .attr("r", d => d.r)
-      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
-    d3.selectAll(".visiable-name")
-      .attr("x", d => d.cx)
-      .attr("y", d => d.cy);
+    
     rects
       .attr("x", d => d.cx - d.r / 2)
       .attr("y", d => d.cy - d.r / 2)
       .attr("width", d => d.r)
       .attr("height", d => d.r)
       .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
-
     points
-      .enter()
-      .append("circle")
-      .attr("class", "point circle")
       .attr("cx", d => d.cx)
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
-      .style("fill", d => d.color)
-      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity)
-      .on("mouseover", that.on_mouseover)
-      .on("mouseout", that.on_mouseout)
-      .on("dblclick", that.pin)
-      .append("text")
-      .attr("class", "visiable-name")
-      .attr("x", d => d.cx)
-      .attr("y", d => d.cy)
-      .text(d => (d.r > 1 ? d.info.abbr : ""))
-      .attr("font-family", "sans-serif")
-      .attr("font-size", "12px");
+      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+    d3.selectAll(".visiable-name")
+      .attr("x", d => d.cx + d.r)
+      .attr("y", d => d.cy + d.r / 2);
 
     rects
       .enter()
@@ -273,6 +254,28 @@ LayoutClass = function() {
       .on("mouseover", that.on_mouseover)
       .on("mouseout", that.on_mouseout)
       .on("dblclick", that.pin);
+
+    points
+      .enter()
+      .append("circle")
+      .attr("class", "point circle")
+      .attr("cx", d => d.cx)
+      .attr("cy", d => d.cy)
+      .attr("r", d => d.r)
+      .style("fill", d => d.color)
+      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity)
+      .on("mouseover", that.on_mouseover)
+      .on("mouseout", that.on_mouseout)
+      .on("dblclick", that.pin)
+    points
+      .enter()
+      .append("text")
+      .attr("class", "visiable-name")
+      .attr("x", d => d.cx + d.r)
+      .attr("y", d => d.cy + d.r / 2)
+      .text(d => (d.r > 8 ? d.info.abbr : ""))
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "12px");
   };
 
   that.on_mouseover = function(d) {
