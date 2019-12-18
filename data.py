@@ -9,7 +9,7 @@ from vctoolkit import pkl_load
 
 def build_connections(movies, participants, role, threshold):
   """
-  Build connections between movies and participants (cast and director).
+  Build connections between movies and participants (cast and directors).
   The `role` filed in the `attributes` will be constructed with corresponding
   pointers, and the nodes that are not connected to any movie will be removed.
 
@@ -135,7 +135,7 @@ def load_data():
   for m in movies.values():
     m.cast = m.attributes['cast_link']
     m.attributes.pop('cast_link')
-    m.director = m.attributes['director_link']
+    m.directors = m.attributes['director_link']
     m.attributes.pop('director_link')
   new_id = 0
   movies, new_id = change_to_uniform_id(movies, new_id)

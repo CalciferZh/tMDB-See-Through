@@ -40,7 +40,7 @@ def set_range_speed_test():
     date_max = np.random.randint(date_min, 20151231)
     graph.set_range(date_min, date_max)
     data = {
-      'movie_weights': graph.export_movie_weights(),
+      'node_weights': graph.export_node_weights(),
       'actor_scores': graph.export_actor_scores(),
       'director_scores': graph.export_director_scores(),
       'edges': graph.export_selected_edges()
@@ -96,4 +96,4 @@ def graph_usage_example():
 
 
 if __name__ == '__main__':
-  graph_usage_example()
+  set_range_speed_test()
