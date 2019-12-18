@@ -132,21 +132,19 @@ LayoutClass = function() {
         [width, height]
       ])
       .on("start", function() {
-        console.log("zoom start")
         graph_vars['xScale-back'] = graph_vars['xScale'];
         graph_vars['yScale-back'] = graph_vars['yScale'];
       })
       .on("zoom", function() {
-        console.log("zoom")
         console.log(d3.event.transform);
         // graph_vars["svg"].attr("transform", d3.event.transform);
         graph_vars['xScale'] = d3.event.transform.rescaleX(graph_vars['xScale-back']);
         graph_vars['yScale'] = d3.event.transform.rescaleY(graph_vars['yScale-back'])
       })
       .on("end", function() {
-        console.log("zoom end")
         graph_vars['xScale-back'] = null;
         graph_vars['yScale-back'] = null;
+        if (d3.event.transform != d3.zoomIdentity.scale(1))
         that.zoom_svg.call(that.zoom.transform, d3.zoomIdentity.scale(1));
       });
 
