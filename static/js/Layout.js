@@ -124,50 +124,53 @@ LayoutClass = function() {
       margin.top -
       margin.bottom;
 
-    let zoom = d3
+    that.zoom = d3
       .zoom()
       .scaleExtent([0.5, 2])
       .extent([
         [0, 0],
         [width, height]
       ])
-      .on("zoom", zoomed);
+      .on("start", function() {
+        console.log("zoom start")
+        graph_vars['xScale-back'] = graph_vars['xScale'];
+        graph_vars['yScale-back'] = graph_vars['yScale'];
+      })
+      .on("zoom", function() {
+        console.log("zoom")
+        console.log(d3.event.transform);
+        // graph_vars["svg"].attr("transform", d3.event.transform);
+        graph_vars['xScale'] = d3.event.transform.rescaleX(graph_vars['xScale-back']);
+        graph_vars['yScale'] = d3.event.transform.rescaleY(graph_vars['yScale-back'])
+      })
+      .on("end", function() {
+        console.log("zoom end")
+        graph_vars['xScale-back'] = null;
+        graph_vars['yScale-back'] = null;
+        that.zoom_svg.call(that.zoom.transform, d3.zoomIdentity.scale(1));
+      });
 
-    that.graph_div
+    that.zoom_svg = that.graph_div
       .append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom - 40)
       .append("rect")
+      .attr("class", "zoom")
       .attr("width", width)
       .attr("height", height)
       .style("fill", "none")
       .style("pointer-events", "all")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      .call(zoom);
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    function zoomed() {
-      graph_vars["svg"].attr("transform", d3.event.transform);
-    }
+    that.zoom_svg.call(that.zoom);
 
     graph_vars["svg"] = that.graph_div
       .select("svg")
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // // let xs = DataLoader.points.map(d => d.x);
-    // // let ys = DataLoader.points.map(d => d.x);
-    // // let x_min = Math.min(...xs);
-    // // let x_max = Math.max(...xs);
-    // // let y_min = Math.min(...ys);
-    // // let y_max = Math.max(...ys);
-    // let x_min = -1.5;
-    // let x_max = 2.5;
-    // let y_min = -2;
-    // let y_max = 2;
-    // graph_vars["xScale"] = d3.scaleLinear().range([0, width]).domain([x_min - (x_max - x_min) / 5, x_max + (x_max - x_min) / 5]);
-    // graph_vars["yScale"] = d3.scaleLinear().range([height, 0]).domain([y_min - (y_max - y_min) / 5, y_max + (y_max - y_min) / 5]);
-    graph_vars["xScale"] = d3.scaleLinear().range([0, width]);
-    graph_vars["yScale"] = d3.scaleLinear().range([height, 0]);
+    graph_vars["xScale"] = d3.scaleLinear().range([0, width]).domain([-1, 2]);
+    graph_vars["yScale"] = d3.scaleLinear().range([height, 0]).domain([-1, 2]);
 
     that.update_graph();
   };
@@ -183,8 +186,8 @@ LayoutClass = function() {
     let svg = graph_vars["svg"];
     let xScale = graph_vars["xScale"];
     let yScale = graph_vars["yScale"];
-    graph_vars["xScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
-    graph_vars["yScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
+    // graph_vars["xScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
+    // graph_vars["yScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
 
     DataLoader.valid_points.forEach(function(d) {
       d.cx = xScale(d.x);
