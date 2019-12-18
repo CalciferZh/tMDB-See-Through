@@ -186,6 +186,19 @@ class MovieGraph:
     s = json.dumps({k: v.attributes for k, v in self.directors.items()})
     return s
 
+  def export_neighbors(self):
+    neighbors = {}
+    for m in self.movies.values():
+      for x in m.participants.values():
+        neighbors[x.id] = set([m.id])
+      for a in m.participants.values():
+        for b in m.participants.values():
+          neighbors[a.id].add(b.id)
+          neighbors[b.id].add(a.id)
+
+    neighbors = {k: list(v) for k, v in neighbors.items()}
+    return json.dumps(neighbors)
+
   def export_positions(self):
     s = json.dumps(
       {k: [self.positions_all[k][0], self.positions_all[k][1]] \

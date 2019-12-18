@@ -137,6 +137,8 @@ def load_data():
     m.attributes.pop('cast_link')
     m.directors = m.attributes['director_link']
     m.attributes.pop('director_link')
+    m.participants = m.cast.copy()
+    m.participants.update(m.directors)
   new_id = 0
   movies, new_id = change_to_uniform_id(movies, new_id)
   actors, new_id = change_to_uniform_id(actors, new_id)

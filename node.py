@@ -24,9 +24,7 @@ class Movie:
 
     self.directors = {}
     self.cast = {}
-
-  def crew(self):
-    return self.directors + self.cast
+    self.participants = {}
 
 
 class Participant:

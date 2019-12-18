@@ -36,17 +36,13 @@ def set_range_speed_test():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
   for _ in tqdm(list(range(1000)), ascii=True):
-    date_min = np.random.randint(20050101)
-    date_max = np.random.randint(date_min, 20151231)
-    graph.set_range(date_min, date_max)
+    graph.set_range(0, 1576685129)
     data = {
       'node_weights': graph.export_node_weights(),
       'actor_scores': graph.export_actor_scores(),
       'director_scores': graph.export_director_scores(),
       'edges': graph.export_selected_edges()
     }
-    print(data['node_weights'])
-    exit(0)
     json.dumps(data)
 
 
@@ -76,6 +72,8 @@ def graph_dump_data_test():
 def graph_usage_example():
   movies, actors, directors = load_data()
   graph = MovieGraph(movies, actors, directors)
+  print(graph.export_neighbors())
+  exit(0)
   graph.set_range(
     time.mktime(
       datetime.datetime.strptime('20050101', '%Y%m%d').timetuple()
@@ -98,4 +96,4 @@ def graph_usage_example():
 
 
 if __name__ == '__main__':
-  set_range_speed_test()
+  graph_usage_example()
