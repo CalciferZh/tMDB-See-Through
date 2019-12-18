@@ -45,6 +45,8 @@ def set_range_speed_test():
       'director_scores': graph.export_director_scores(),
       'edges': graph.export_selected_edges()
     }
+    print(data['node_weights'])
+    exit(0)
     json.dumps(data)
 
 

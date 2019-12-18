@@ -65,18 +65,18 @@ class MovieGraph:
       else:
         self.node_weights[m.id] = 1
         self.movies_selected.append(m.id)
-      for a_id in m.cast:
-        if a_id in self.node_weights:
-          self.node_weights[a_id] = \
-            max(self.node_weights[m.id], self.node_weights[a_id])
+      for a in m.cast.values():
+        if a.id in self.node_weights:
+          self.node_weights[a.id] = \
+            max(self.node_weights[m.id], self.node_weights[a.id])
         else:
-          self.node_weights[a_id] = self.node_weights[m.id]
-      for d_id in m.directors:
-        if d_id in self.node_weights:
-          self.node_weights[d_id] = \
-            max(self.node_weights[m.id], self.node_weights[d_id])
+          self.node_weights[a.id] = self.node_weights[m.id]
+      for d in m.directors.values():
+        if d.id in self.node_weights:
+          self.node_weights[d.id] = \
+            max(self.node_weights[m.id], self.node_weights[d.id])
         else:
-          self.node_weights[d_id] = self.node_weights[m.id]
+          self.node_weights[d.id] = self.node_weights[m.id]
 
     for m_id in self.movies_selected:
       self.id_selected_to_uniform[self.N_selected] = m_id
