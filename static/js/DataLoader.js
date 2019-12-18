@@ -312,7 +312,15 @@ DataLoaderClass = function() {
   };
   that._pin = function(id) {
     pinned_id = id;
-    let node = new request_node(that.pin_url, data => {}, "json", "POST");
+    let node = new request_node(that.pin_url, node_weights => {
+      console.log(node_weights);
+      for (let key in node_weights) {
+        that.points[key].weight = node_weights[key];
+      }
+      that.set_size();
+      that.set_opacity();
+      that.set_valid();
+    }, "json", "POST");
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
@@ -322,7 +330,14 @@ DataLoaderClass = function() {
     node.notify();
   };
   that._unpin = function() {
-    let node = new request_node(that.unpin_url, data => {}, "json", "GET");
+    let node = new request_node(that.unpin_url, node_weights => {
+      for (let key in node_weights) {
+        that.points[key].weight = node_weights[key];
+      }
+      that.set_size();
+      that.set_opacity();
+      that.set_valid();
+    }, "json", "GET");
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
