@@ -62,11 +62,11 @@ def update_api():
 def pin_api():
   pin_id = int(request.json['pin'])
   graph.pin(pin_id)
-  return 'OK', 200
+  return graph.export_node_weights(), 200
 
 
 @app.route('/unpin', methods=['GET'])
 def unpin_api():
   graph.unpin()
   graph.set_range(graph.date_min, graph.date_max)
-  return 'OK', 200
+  return graph.export_node_weights(), 200

@@ -96,4 +96,4 @@ def graph_usage_example():
 
 
 if __name__ == '__main__':
-  graph_usage_example()
+  set_range_speed_test()

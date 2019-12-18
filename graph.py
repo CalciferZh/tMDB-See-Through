@@ -62,6 +62,8 @@ class MovieGraph:
   def set_range(self, date_min, date_max):
     self.date_min = date_min
     self.date_max = date_max
+    self.date_mid = (self.date_max + self.date_min) / 2
+    self.window_size = (self.date_max - self.date_min) / 2
     self.current_step = min(self.max_step, self.current_step * 1.5)
 
     self.id_selected_to_uniform = {}
@@ -72,22 +74,25 @@ class MovieGraph:
     self.node_weights = {}
     for m in self.movies.values():
       if m.date < date_min:
-        self.node_weights[m.id] = \
-          0.5 ** ((date_min - m.date) / self.movie_half_life)
+        self.node_weights[m.id] = 0
+        # self.node_weights[m.id] = \
+        #   0.5 ** ((date_min - m.date) / self.movie_half_life)
       elif m.date > date_max:
-        self.node_weights[m.id] = \
-          0.5 ** ((m.date - date_max) / self.movie_half_life)
+        self.node_weights[m.id] = 0
+        # self.node_weights[m.id] = \
+        #   0.5 ** ((m.date - date_max) / self.movie_half_life)
       else:
-        self.node_weights[m.id] = 1
+        x = 1 - abs(m.date - self.date_mid) / self.window_size
+        self.node_weights[m.id] = np.log(np.e * x - x + 1)
         self.movies_selected.append(m.id)
       for a in m.cast.values():
-        if a.id in self.node_weights:
+        if a.id in self.node_weights.keys():
           self.node_weights[a.id] = \
             max(self.node_weights[m.id], self.node_weights[a.id])
         else:
           self.node_weights[a.id] = self.node_weights[m.id]
       for d in m.directors.values():
-        if d.id in self.node_weights:
+        if d.id in self.node_weights.keys():
           self.node_weights[d.id] = \
             max(self.node_weights[m.id], self.node_weights[d.id])
         else:
@@ -137,9 +142,9 @@ class MovieGraph:
             self.node_weights[m.id] * m.attributes[k]
 
     for v in self.actor_scores.values():
-      v['vote_average'] /= v['movie_count']
+      v['vote_average'] /= (v['movie_count'] + np.finfo(np.float32).eps)
     for v in self.director_scores.values():
-      v['vote_average'] /= v['movie_count']
+      v['vote_average'] /= (v['movie_count'] + np.finfo(np.float32).eps)
 
     self.edges_selected = []
     self.edges_selected_uniform_id = []
