@@ -26,7 +26,7 @@ class MovieGraph:
     self.max_step = 1e-2
     self.min_step = 1e-4
     self.current_step = self.max_step
-    self.decay = 0.99
+    self.decay = 0.995
 
     self.movie_half_life = 2592000 * 6 # months
 
@@ -89,6 +89,26 @@ class MovieGraph:
       self.movies_selected + self.actors_selected + self.directors_selected
     ]
 
+    self.actor_scores = {
+      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
+    }
+    self.director_scores = {
+      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
+    }
+    for m in self.movies.values():
+      for x in m.cast.values():
+        for k in SCORE_ATTRIBUTES:
+          self.actor_scores[x.id][k] += m.weight * m.attributes[k]
+      for x in m.director.values():
+        for k in SCORE_ATTRIBUTES:
+          self.director_scores[x.id][k] += m.weight * m.attributes[k]
+
+    for v in self.actor_scores.values():
+      v['vote_average'] /= v['movie_count']
+    for v in self.director_scores.values():
+      v['vote_average'] /= v['movie_count']
+
+    self.edges_weights = []
     self.edges_selected = []
     self.edges_selected_uniform_id = []
     for m_id in self.movies_selected:
@@ -161,25 +181,7 @@ class MovieGraph:
     return {k: v.weight for k, v in self.movies.items()}
 
   def export_actor_scores(self):
-    data = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
-    }
-    for m in self.movies.values():
-      for x in m.cast.values():
-        for k in SCORE_ATTRIBUTES:
-          data[x.id][k] += m.weight * m.attributes[k]
-    for v in data.values():
-      v['vote_average'] /= v['movie_count']
-
-    return data
+    return self.actor_scores
 
   def export_director_scores(self):
-    data = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
-    }
-    for m in self.movies.values():
-      for x in m.director.values():
-        for k in SCORE_ATTRIBUTES:
-          data[x.id][k] += m.weight * m.attributes[k]
-
-    return data
+    return self.director_scores

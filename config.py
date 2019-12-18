@@ -19,7 +19,7 @@ DIRECTOR_ATTRIBUTES = {'id', 'name', 'gender', 'movie_id'}
 
 SCORE_ATTRIBUTES = [
   'budget', 'popularity', 'revenue', 'runtime', 'vote_average', 'vote_count',
-  'movie_count' # trick
+  'movie_count'
 ]
 
 GENRES = [
