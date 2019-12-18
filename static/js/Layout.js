@@ -262,7 +262,9 @@ LayoutClass = function() {
       );
     d3.selectAll(".visiable-name")
       .attr("x", d => d.cx + d.r)
-      .attr("y", d => d.cy + d.r / 2);
+      .attr("y", d => d.cy + d.r / 2)
+      .attr("opacity", d =>
+      d.highlighted ? that.highlight_point_opacity : d.opacity);
 
     rects
       .enter()
@@ -299,6 +301,8 @@ LayoutClass = function() {
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2)
       .text(d => (d.r > 8 ? d.info.abbr : ""))
+      .attr("opacity", d =>
+      d.highlighted ? that.highlight_point_opacity : d.opacity)
       .attr("font-family", "sans-serif")
       .attr("font-size", "12px");
   };
