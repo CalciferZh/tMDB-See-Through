@@ -13,6 +13,22 @@ LayoutClass = function() {
   that.highlight_line_opacity = 1;
   that.highlight_point_opacity = 1;
 
+  d3.select("#man-size").on("change", function() {
+    let val = document.getElementById("man-size").value;
+    DataLoader.set_size_method(val, true);
+    DataLoader.set_size();
+    d3.selectAll('.rect').attr("width", d => d.r).attr("height", d => d.r);
+    d3.selectAll('.circle').attr("r", d => d.r);
+  });
+
+  d3.select("#movie-size").on("change", function() {
+    let val = document.getElementById("movie-size").value;
+    DataLoader.set_size_method(val, false);
+    DataLoader.set_size();
+    d3.selectAll('.rect').attr("width", d => d.r).attr("height", d => d.r);
+    d3.selectAll('.circle').attr("r", d => d.r);
+  });
+
   let graph_vars = {};
 
   that.draw_time_window = function() {
@@ -43,7 +59,7 @@ LayoutClass = function() {
         return d.release_date;
       })
       .domain(xScale.domain())
-      .thresholds(xScale.ticks(30));
+      .thresholds(xScale.ticks(40));
     let bins = histogram(DataLoader.movies);
     yScale.domain([0, d3.max(bins, d => d.length)]);
 
@@ -70,9 +86,9 @@ LayoutClass = function() {
     svg
       .append("g")
       .attr("transform", `translate(0, ${height})`)
-      .call(d3.axisBottom(xScale));
+      .call(d3.axisBottom(xScale).ticks(20));
 
-    svg.append("g").call(d3.axisLeft(yScale));
+    svg.append("g").call(d3.axisLeft(yScale).ticks(5));
 
     // brush
     let line_brush = d3
@@ -110,7 +126,7 @@ LayoutClass = function() {
     graph_vars["svg"] = that.graph_div
       .append("svg")
       .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("height", height + margin.top + margin.bottom  - 40)
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
@@ -140,14 +156,19 @@ LayoutClass = function() {
     xScale.domain([x_min, x_max]);
     yScale.domain([y_min, y_max]);
 
-    let links = svg.selectAll(".link").data(DataLoader.edges, d => d.id);
-    let points = svg
-      .selectAll(".point")
-      .data(DataLoader.valid_points, x => x.id);
-    points.each(d => {
+    DataLoader.valid_points.forEach(function(d) {
       d.cx = xScale(d.x);
       d.cy = yScale(d.y);
     });
+
+    let links = svg.selectAll(".link").data(DataLoader.edges, d => d.id);
+    let points = svg
+      .selectAll(".circle")
+      .data(DataLoader.valid_points.filter(x => x.type != "movie"), x => x.id);
+    let rects = svg
+    .selectAll(".rect")
+    .data(DataLoader.valid_points.filter(x => x.type == "movie"), x => x.id);
+
 
     // draw link first
 
@@ -171,36 +192,35 @@ LayoutClass = function() {
       .style("stroke-opacity", that.default_line_opacity);
 
     points.exit().remove();
+    rects.exit().remove();
 
     points.attr("cx", d => d.cx).attr("cy", d => d.cy);
-
-    let drag_handler = d3
-      .drag()
-      .on("start drag", d => {
-        DataLoader.pins = [
-          {
-            id: d.id,
-            x: xScale.invert(d3.event.x),
-            y: xScale.invert(d3.event.y)
-          }
-        ];
-      })
-      .on("end", () => {
-        DataLoader.pins = [];
-      });
+    rects.attr("x", d => d.cx - d.r / 2).attr("y", d => d.cy - d.r / 2);
 
     points
       .enter()
       .append("circle")
-      .attr("class", "point")
+      .attr("class", "point circle")
       .attr("cx", d => d.cx)
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
       .style("fill", d => d.color)
       .style("fill-opacity", that.default_point_opacity)
       .on("mouseover", that.on_mouseover)
-      .on("mouseout", that.on_mouseout)
-      .call(drag_handler);
+      .on("mouseout", that.on_mouseout);
+
+      rects
+      .enter()
+      .append("rect")
+      .attr("class", "point rect")
+      .attr("x", d => d.cx - d.r / 2)
+      .attr("y", d => d.cy - d.r / 2)
+      .attr("width", d => d.r)
+      .attr("height", d => d.r)
+      .style("fill", d => d.color)
+      .style("fill-opacity", that.default_point_opacity)
+      .on("mouseover", that.on_mouseover)
+      .on("mouseout", that.on_mouseout);
   };
 
   that.on_mouseover = function(d) {
@@ -249,6 +269,7 @@ LayoutClass = function() {
   };
 
   that.init_list = function() {
+    that.draw_detail_table(DataLoader.points[0]);
     let columns = [
       {
         field: "name",
@@ -272,7 +293,7 @@ LayoutClass = function() {
     ];
 
     that.table = $("#table-list").bootstrapTable({
-      height: 500,
+      height: d3.select("#list-row").node().getBoundingClientRect().height - 40,
       sortName: "vote_average",
       sortOrder: "desc",
       columns: columns,

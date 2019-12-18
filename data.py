@@ -119,8 +119,8 @@ def load_data():
   dict
     A dict of directors with id as keys.
   """
-  # if os.path.isfile(PKL_SAVE_PATH):
-  if False:
+  if os.path.isfile(PKL_SAVE_PATH):
+  # if False:
     movies, actors, directors = pkl_load(PKL_SAVE_PATH)
   else:
     movies = load_movie()

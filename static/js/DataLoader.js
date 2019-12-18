@@ -20,6 +20,32 @@ DataLoaderClass = function() {
   that.directors = [];
   that.pins = [];
 
+  // calculate attr
+  const voteavg2size = x => (x.vote_average-5) * (x.vote_average-5);
+  const budget2size = x => Math.log(x.budget + 1) / 10;
+  const revenue2size = x => (Math.log(x.revenue + 1) - 10) *  (Math.log(x.revenue + 1) - 10) / 6;
+  const popularity2size = x => Math.sqrt(x.popularity) / 1.5;
+  const runtime2size = x => Math.sqrt(x.runtime);
+  const attr2size = {
+    'vote_average': voteavg2size,
+    'budget': budget2size,
+    'revenue': revenue2size,
+    'popularity': popularity2size,
+    'runtime': runtime2size,
+  };
+  that.man_size_method = popularity2size;
+  that.movie_size_method = revenue2size;
+  that.set_size_method = function (attr, is_man) {
+    if (is_man) that.man_size_method = attr2size[attr];
+    else that.movie_size_method = attr2size[attr];
+  };
+
+  that.set_size = function() {
+    for(let point of that.points) {
+      point.r = point.type == "movie" ? that.movie_size_method(point.info) : that.man_size_method(point.info);
+    }
+  };
+
   that.get_data = function(dataset) {
     let get_movies_node = new request_node(
       that.get_movies_url,
@@ -41,7 +67,7 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            r: 3,
+            r: 0,
             adj: [],
             info: that.movies[key],
           };
@@ -68,7 +94,7 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            r: 9,
+            r: 0,
             adj: [],
             info: that.actors[key],
           };
@@ -94,7 +120,7 @@ DataLoaderClass = function() {
             valid: true,
             x: 0,
             y: 0,
-            r: 3,
+            r: 0,
             adj: [],
             info: that.directors[key]
           };
@@ -125,7 +151,7 @@ DataLoaderClass = function() {
           point.adj = [];
         }
         for (let key in data.movie_weights) {
-          that.points[key].r = data.movie_weights[key] * 2;
+          that.points[key].r = data.movie_weights[key] * 8;
         }
         for (let key in data.actor_scores) {
           for (let attr in data.actor_scores[key]) {
@@ -133,7 +159,6 @@ DataLoaderClass = function() {
           }
           if ('popularity' in data.actor_scores[key]) that.actors[key]['popularity'] =  that.actors[key]['popularity'].toFixed(2);
           if ('vote_average' in data.actor_scores[key]) that.actors[key]['vote_average'] =  that.actors[key]['vote_average'].toFixed(1);
-          that.points[key].r = that.get_actor_size(that.actors[key]);
         }
         for (let key in data.director_scores) {
           for (let attr in data.director_scores[key]) {
@@ -141,15 +166,15 @@ DataLoaderClass = function() {
           }
           if ('popularity' in data.director_scores[key]) that.directors[key]['popularity'] =  that.directors[key]['popularity'].toFixed(2);
           if ('vote_average' in data.director_scores[key]) that.directors[key]['vote_average'] =  that.directors[key]['vote_average'].toFixed(1);
-          that.points[key].r = that.get_director_size(that.directors[key]);
         }
+        that.set_size(that.attr);
         for (let _edge of data.edges) {
           let edge = {
             source: that.points[_edge[0]],
             target: that.points[_edge[1]],
             weight: 1,
             id: 100000 * _edge[0] + _edge[1] // a naive hash
-          }
+          };
           edge.source.adj.push(edge.target);
           edge.target.adj.push(edge.source);
           that.edges.push(edge);
@@ -202,17 +227,6 @@ DataLoaderClass = function() {
     that.valid_points = that.points.filter(d => d.valid);
   };
 
-  that.get_actor_size = function(actor) {
-    return (
-      Math.sqrt(Math.log(actor.budget) / 10) + Math.sqrt(actor.popularity / 10)
-    );
-  };
-  that.get_director_size = function(director) {
-    return (
-      Math.sqrt(Math.log(director.budget) / 10) +
-      Math.sqrt(director.popularity / 10)
-    );
-  };
   that.get_graph_info_about_man = function(man) {
     let ret = {};
     ret.movies = man.adj.map(movie => movie.id);

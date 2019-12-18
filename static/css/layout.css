@@ -275,6 +275,7 @@ info:not(:disabled):not(.disabled).active,
 
 th, td {
     font-size: 16px;
+    padding: .5rem;
 }
 
 .bootstrap-table {
