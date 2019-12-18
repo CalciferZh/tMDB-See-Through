@@ -1,6 +1,11 @@
 DataLoaderClass = function() {
   let that = this;
 
+  that.busy = false;
+  that.range_cache = null;
+
+  that.pinned_id = -1;
+
   that.color = d3.scaleOrdinal(d3.schemeCategory10);
   that.parseDate = d3.timeParse("%Y%m%d");
 
@@ -10,6 +15,8 @@ DataLoaderClass = function() {
   that.get_directors_url = "/directors";
   that.set_range_url = "/set_range";
   that.update_url = "/update";
+  that.pin_url = "/pin";
+  that.unpin_url = "/unpin";
 
   // data
   that.edges = [];
@@ -18,35 +25,55 @@ DataLoaderClass = function() {
   that.movies = [];
   that.actors = [];
   that.directors = [];
-  that.pins = [];
 
   // calculate attr
-  const voteavg2size = x => (x.vote_average-5) * (x.vote_average-5);
+  const voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
   const budget2size = x => Math.log(x.budget + 1) / 10;
-  const revenue2size = x => (Math.log(x.revenue + 1) - 10) *  (Math.log(x.revenue + 1) - 10) / 6;
+  const revenue2size = x =>
+    ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
   const popularity2size = x => Math.sqrt(x.popularity) / 1.5;
   const runtime2size = x => Math.sqrt(x.runtime);
   const attr2size = {
-    'vote_average': voteavg2size,
-    'budget': budget2size,
-    'revenue': revenue2size,
-    'popularity': popularity2size,
-    'runtime': runtime2size,
+    vote_average: voteavg2size,
+    budget: budget2size,
+    revenue: revenue2size,
+    popularity: popularity2size,
+    runtime: runtime2size
   };
   that.man_size_method = popularity2size;
   that.movie_size_method = revenue2size;
-  that.set_size_method = function (attr, is_man) {
+  that.set_size_method = function(attr, is_man) {
     if (is_man) that.man_size_method = attr2size[attr];
     else that.movie_size_method = attr2size[attr];
   };
 
   that.set_size = function() {
-    for(let point of that.points) {
-      point.r = point.type == "movie" ? that.movie_size_method(point.info) : that.man_size_method(point.info);
+    for (let point of that.points) {
+      point.r =
+        point.type == "movie"
+          ? that.movie_size_method(point.info)
+          : that.man_size_method(point.info);
+    }
+  };
+  that.set_opacity = function() {
+    for (let point of that.points) {
+      point.opacity = Layout.default_point_opacity * point.weight;
+    }
+    for (let edge of that.edges) {
+      edge.weight = edge.source.weight;
+      edge.opacity = Layout.default_point_opacity * edge.weight;
     }
   };
 
   that.get_data = function(dataset) {
+    const get_abbr = a =>
+      a.split(" ")[0] +
+      " " +
+      a
+        .split(" ")
+        .slice(1)
+        .map(x => x[0] + ".")
+        .join(" ");
     let get_movies_node = new request_node(
       that.get_movies_url,
       data => {
@@ -57,9 +84,14 @@ DataLoaderClass = function() {
           that.movies[key]["release_date"] = new Date(
             data[key]["release_date"] * 1000
           );
-          that.movies[key]['popularity'] =  that.movies[key]['popularity'].toFixed(2);
-          that.movies[key]['vote_average'] =  that.movies[key]['vote_average'].toFixed(1);
-          that.movies[key]['name'] = that.movies[key]['title'];
+          that.movies[key]["popularity"] = that.movies[key][
+            "popularity"
+          ].toFixed(2);
+          that.movies[key]["vote_average"] = that.movies[key][
+            "vote_average"
+          ].toFixed(1);
+          that.movies[key]["name"] = that.movies[key]["title"];
+          that.movies[key]["abbr"] = get_abbr(that.movies[key]["name"]);
           that.points[key] = {
             id: key,
             type: "movie",
@@ -69,7 +101,7 @@ DataLoaderClass = function() {
             y: 0,
             r: 0,
             adj: [],
-            info: that.movies[key],
+            info: that.movies[key]
           };
         }
         Layout.draw_time_window();
@@ -87,6 +119,7 @@ DataLoaderClass = function() {
         for (let key in data) {
           that.actors[key] = data[key];
           that.actors[key].id = key;
+          that.actors[key]["abbr"] = get_abbr(that.actors[key]["name"]);
           that.points[key] = {
             id: key,
             type: "actor",
@@ -96,7 +129,7 @@ DataLoaderClass = function() {
             y: 0,
             r: 0,
             adj: [],
-            info: that.actors[key],
+            info: that.actors[key]
           };
         }
       },
@@ -113,6 +146,7 @@ DataLoaderClass = function() {
         for (let key in data) {
           that.directors[key] = data[key];
           that.directors[key].id = key;
+          that.directors[key]["abbr"] = get_abbr(that.directors[key]["name"]);
           that.points[key] = {
             id: key,
             type: "director",
@@ -125,7 +159,8 @@ DataLoaderClass = function() {
             info: that.directors[key]
           };
         }
-        that.set_range([new Date(1980, 0, 1), new Date(2020, 0, 1)]);
+        Layout.line_brush.move(Layout.brush_g, [0, 300]);
+        // that.set_range([new Date(2000, 0, 31), new Date(2004, 0, 1)]);
         Layout.init_graph();
         Layout.init_list();
       },
@@ -141,33 +176,52 @@ DataLoaderClass = function() {
   };
 
   that.set_range = function(range) {
+    if (that.busy) {
+      // still wating response, cache the most recent request range
+      that.range_cache = range;
+      return;
+    }
+    that.busy = true; // now we can send the request
+    //console.log("set_range");
     that.range = range;
+    that.range_cache = null;
     let node = new request_node(
       that.set_range_url,
       data => {
-        console.log("set_range");
+        //console.log("set_range_finish");
         that.edges = [];
         for (let point of that.points) {
           point.adj = [];
         }
-        for (let key in data.movie_weights) {
-          that.points[key].r = data.movie_weights[key] * 8;
+        for (let key in data.node_weights) {
+          that.points[key].weight = data.node_weights[key];
         }
         for (let key in data.actor_scores) {
           for (let attr in data.actor_scores[key]) {
             that.actors[key][attr] = data.actor_scores[key][attr];
           }
-          if ('popularity' in data.actor_scores[key]) that.actors[key]['popularity'] =  that.actors[key]['popularity'].toFixed(2);
-          if ('vote_average' in data.actor_scores[key]) that.actors[key]['vote_average'] =  that.actors[key]['vote_average'].toFixed(1);
+          if ("popularity" in data.actor_scores[key])
+            that.actors[key]["popularity"] = that.actors[key][
+              "popularity"
+            ].toFixed(2);
+          if ("vote_average" in data.actor_scores[key])
+            that.actors[key]["vote_average"] = that.actors[key][
+              "vote_average"
+            ].toFixed(1);
         }
         for (let key in data.director_scores) {
           for (let attr in data.director_scores[key]) {
             that.directors[key][attr] = data.director_scores[key][attr];
           }
-          if ('popularity' in data.director_scores[key]) that.directors[key]['popularity'] =  that.directors[key]['popularity'].toFixed(2);
-          if ('vote_average' in data.director_scores[key]) that.directors[key]['vote_average'] =  that.directors[key]['vote_average'].toFixed(1);
+          if ("popularity" in data.director_scores[key])
+            that.directors[key]["popularity"] = that.directors[key][
+              "popularity"
+            ].toFixed(2);
+          if ("vote_average" in data.director_scores[key])
+            that.directors[key]["vote_average"] = that.directors[key][
+              "vote_average"
+            ].toFixed(1);
         }
-        that.set_size(that.attr);
         for (let _edge of data.edges) {
           let edge = {
             source: that.points[_edge[0]],
@@ -180,7 +234,12 @@ DataLoaderClass = function() {
           that.edges.push(edge);
         }
         that.set_valid();
+        that.set_size();
+        that.set_opacity();
         Layout.update_list();
+        Layout.draw_single_graph();
+        that.busy = false;
+        if (that.range_cache) that.set_range(that.range_cache); // keep updating the range
       },
       "json",
       "POST"
@@ -196,13 +255,23 @@ DataLoaderClass = function() {
   };
 
   that.get_coord = function(callback) {
+    if (that.busy) {
+      if (callback) setTimeout(callback, 500); // wait 500 ms and continue the rendering
+      return;
+    }
+    that.busy = true;
+    //console.log("get_coord");
     let node = new request_node(
       that.update_url,
       data => {
-        console.log("get_coord");
+        //console.log("get_coord_finish");
         for (let key in data) {
           that.points[key].x = data[key][0];
           that.points[key].y = data[key][1];
+        }
+        that.busy = false;
+        if (that.range_cache) {
+          that.set_range(that.range_cache);
         }
         if (callback) callback();
       },
@@ -212,19 +281,17 @@ DataLoaderClass = function() {
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
-    node.set_data( {
-      'pins': that.pins,
-    });
     node.notify();
   };
 
   that.set_valid = function() {
-    for (let point of that.points) point.valid = false;
-    for (let edge of that.edges) {
-      edge.source.valid = true;
-      edge.target.valid = true;
-    }
-    that.valid_points = that.points.filter(d => d.valid);
+    // for (let point of that.points) point.valid = false;
+    // for (let edge of that.edges) {
+    //   edge.source.valid = true;
+    //   edge.target.valid = true;
+    // }
+    // that.valid_points = that.points.filter(d => d.valid);
+    that.valid_points = that.points;
   };
 
   that.get_graph_info_about_man = function(man) {
@@ -242,5 +309,36 @@ DataLoaderClass = function() {
     let ret = {};
     ret.cast = movie.adj.map(man => man.id);
     return ret;
+  };
+  that._pin = function(id) {
+    pinned_id = id;
+    let node = new request_node(that.pin_url, data => {}, "json", "POST");
+    node.set_header({
+      "Content-Type": "application/json;charset=UTF-8"
+    });
+    node.set_data({
+      pin: id
+    });
+    node.notify();
+  };
+  that._unpin = function() {
+    let node = new request_node(that.unpin_url, data => {}, "json", "GET");
+    node.set_header({
+      "Content-Type": "application/json;charset=UTF-8"
+    });
+    node.notify();
+  };
+  that.pin = function(id) {
+    if (that.pinned_id == -1) {
+      that._pin(id);
+    } else {
+      if (that.pinned_id == id) {
+        that.pinned_id = -1;
+        that._unpin();
+      } else {
+        that._unpin();
+        that.pin(id);
+      }
+    }
   };
 };

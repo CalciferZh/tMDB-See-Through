@@ -13,20 +13,27 @@ LayoutClass = function() {
   that.highlight_line_opacity = 1;
   that.highlight_point_opacity = 1;
 
+  that.line_brush = null;
+  that.brush_g = null;
+
   d3.select("#man-size").on("change", function() {
     let val = document.getElementById("man-size").value;
     DataLoader.set_size_method(val, true);
     DataLoader.set_size();
-    d3.selectAll('.rect').attr("width", d => d.r).attr("height", d => d.r);
-    d3.selectAll('.circle').attr("r", d => d.r);
+    d3.selectAll(".rect")
+      .attr("width", d => d.r)
+      .attr("height", d => d.r);
+    d3.selectAll(".circle").attr("r", d => d.r);
   });
 
   d3.select("#movie-size").on("change", function() {
     let val = document.getElementById("movie-size").value;
     DataLoader.set_size_method(val, false);
     DataLoader.set_size();
-    d3.selectAll('.rect').attr("width", d => d.r).attr("height", d => d.r);
-    d3.selectAll('.circle').attr("r", d => d.r);
+    d3.selectAll(".rect")
+      .attr("width", d => d.r)
+      .attr("height", d => d.r);
+    d3.selectAll(".circle").attr("r", d => d.r);
   });
 
   let graph_vars = {};
@@ -91,7 +98,7 @@ LayoutClass = function() {
     svg.append("g").call(d3.axisLeft(yScale).ticks(5));
 
     // brush
-    let line_brush = d3
+    that.line_brush = d3
       .brushX()
       .extent([
         [0, 0],
@@ -108,12 +115,12 @@ LayoutClass = function() {
           ]);
         }
       });
-    let brush_g = svg.append("g").attr("class", "brush");
-    brush_g.call(line_brush);
+    that.brush_g = svg.append("g").attr("class", "brush");
+    that.brush_g.call(that.line_brush);
   };
 
   that.init_graph = function() {
-    let margin = { top: 10, right: 30, bottom: 30, left: 60 };
+    let margin = { top: 10, right: 10, bottom: 10, left: 10 };
     let width =
       that.graph_div.node().getBoundingClientRect().width -
       margin.left -
@@ -123,15 +130,51 @@ LayoutClass = function() {
       margin.top -
       margin.bottom;
 
+    let zoom = d3
+      .zoom()
+      .scaleExtent([0.5, 2])
+      .extent([
+        [0, 0],
+        [width, height]
+      ])
+      .on("zoom", zoomed);
+
+    that.graph_div
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom - 40)
+      .append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .style("fill", "none")
+      .style("pointer-events", "all")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`)
+      .call(zoom);
+
+    function zoomed() {
+      graph_vars["svg"].attr("transform", d3.event.transform);
+    }
+
     graph_vars["svg"] = that.graph_div
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom  - 40)
+.select("svg")
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+    // // let xs = DataLoader.points.map(d => d.x);
+    // // let ys = DataLoader.points.map(d => d.x);
+    // // let x_min = Math.min(...xs);
+    // // let x_max = Math.max(...xs);
+    // // let y_min = Math.min(...ys);
+    // // let y_max = Math.max(...ys);
+    // let x_min = -1.5;
+    // let x_max = 2.5;
+    // let y_min = -2;
+    // let y_max = 2;
+    // graph_vars["xScale"] = d3.scaleLinear().range([0, width]).domain([x_min - (x_max - x_min) / 5, x_max + (x_max - x_min) / 5]);
+    // graph_vars["yScale"] = d3.scaleLinear().range([height, 0]).domain([y_min - (y_max - y_min) / 5, y_max + (y_max - y_min) / 5]);
     graph_vars["xScale"] = d3.scaleLinear().range([0, width]);
     graph_vars["yScale"] = d3.scaleLinear().range([height, 0]);
+
 
     that.update_graph();
   };
@@ -153,8 +196,8 @@ LayoutClass = function() {
     let x_max = Math.max(...xs);
     let y_min = Math.min(...ys);
     let y_max = Math.max(...ys);
-    xScale.domain([x_min, x_max]);
-    yScale.domain([y_min, y_max]);
+    graph_vars["xScale"].domain([x_min, x_max]);
+    graph_vars["yScale"].domain([y_min, y_max]);
 
     DataLoader.valid_points.forEach(function(d) {
       d.cx = xScale(d.x);
@@ -162,13 +205,14 @@ LayoutClass = function() {
     });
 
     let links = svg.selectAll(".link").data(DataLoader.edges, d => d.id);
-    let points = svg
-      .selectAll(".circle")
-      .data(DataLoader.valid_points.filter(x => x.type != "movie"), x => x.id);
-    let rects = svg
-    .selectAll(".rect")
-    .data(DataLoader.valid_points.filter(x => x.type == "movie"), x => x.id);
-
+    let points = svg.selectAll(".circle").data(
+      DataLoader.valid_points.filter(x => x.type != "movie"),
+      x => x.id
+    );
+    let rects = svg.selectAll(".rect").data(
+      DataLoader.valid_points.filter(x => x.type == "movie"),
+      x => x.id
+    );
 
     // draw link first
 
@@ -189,27 +233,37 @@ LayoutClass = function() {
       .attr("y2", d => d.target.cy)
       .style("stroke", "lightgray")
       .style("stroke-width", 1)
-      .style("stroke-opacity", that.default_line_opacity);
+      .style("stroke-opacity", d => d.opacity);
 
     points.exit().remove();
     rects.exit().remove();
 
     points.attr("cx", d => d.cx).attr("cy", d => d.cy);
+    d3.selectAll(".visiable-name").attr("x", d => d.cx).attr("y", d => d.cy)
     rects.attr("x", d => d.cx - d.r / 2).attr("y", d => d.cy - d.r / 2);
 
     points
       .enter()
       .append("circle")
-      .attr("class", "point circle")
-      .attr("cx", d => d.cx)
-      .attr("cy", d => d.cy)
-      .attr("r", d => d.r)
-      .style("fill", d => d.color)
-      .style("fill-opacity", that.default_point_opacity)
-      .on("mouseover", that.on_mouseover)
-      .on("mouseout", that.on_mouseout);
+        .attr("class", "point circle")
+        .attr("cx", d => d.cx)
+        .attr("cy", d => d.cy)
+        .attr("r", d => d.r)
+        .style("fill", d => d.color)
+        .style("fill-opacity", d => d.opacity)
+        .on("mouseover", that.on_mouseover)
+        .on("mouseout", that.on_mouseout)
+        .on("dblclick", that.pin)
+      .append("text")
+        .attr("class", "visiable-name")
+        .attr("x", d => d.cx)
+        .attr("y", d => d.cy)
+        .text(d => d.r > 10 ? d.info.abbr : '')
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "12px");
 
-      rects
+
+    rects
       .enter()
       .append("rect")
       .attr("class", "point rect")
@@ -218,12 +272,14 @@ LayoutClass = function() {
       .attr("width", d => d.r)
       .attr("height", d => d.r)
       .style("fill", d => d.color)
-      .style("fill-opacity", that.default_point_opacity)
+      .style("fill-opacity", d => d.opacity)
       .on("mouseover", that.on_mouseover)
-      .on("mouseout", that.on_mouseout);
+      .on("mouseout", that.on_mouseout)
+      .on("dblclick", that.pin);
   };
 
   that.on_mouseover = function(d) {
+    if (d.weight < 0.15) return;
     that.draw_detail_table(d);
     let ids = [];
     if (d.type == "movie") {
@@ -234,18 +290,23 @@ LayoutClass = function() {
       ids = new Set([...info.movies, ...info.collaborator]);
     }
     d3.selectAll(".point").style("fill-opacity", d =>
-      ids.has(d.id) ? that.highlight_point_opacity : that.default_point_opacity
+      ids.has(d.id) ? that.highlight_point_opacity : d.opacity
     );
     d3.selectAll(".link").style("stroke-opacity", d =>
       ids.has(d.source.id) && ids.has(d.target.id)
         ? that.highlight_line_opacity
-        : that.default_line_opacity
+        : d.opacity
     );
   };
 
+  that.pin = function(d) {
+    console.log("dblclick")
+    DataLoader.pin(d.id);
+  }
+
   that.on_mouseout = function(d) {
-    d3.selectAll(".point").style("fill-opacity", that.default_point_opacity);
-    d3.selectAll(".link").style("stroke-opacity", that.default_line_opacity);
+    d3.selectAll(".point").style("fill-opacity", d => d.opacity);
+    d3.selectAll(".link").style("stroke-opacity", d => d.opacity);
   };
 
   that.draw_detail_table = function(d) {
@@ -293,7 +354,11 @@ LayoutClass = function() {
     ];
 
     that.table = $("#table-list").bootstrapTable({
-      height: d3.select("#list-row").node().getBoundingClientRect().height - 40,
+      height:
+        d3
+          .select("#list-row")
+          .node()
+          .getBoundingClientRect().height - 40,
       sortName: "vote_average",
       sortOrder: "desc",
       columns: columns,
@@ -302,23 +367,22 @@ LayoutClass = function() {
         that.on_mouseover(DataLoader.points[row.id]);
       }
     });
-    that.current_tab = 'movie';
+    that.current_tab = "movie";
 
-    d3.select("#movie-tab").on('click', () => that.switch_tab('movie'));
-    d3.select("#actor-tab").on('click', () => that.switch_tab('actor'));
-    d3.select("#director-tab").on('click', () => that.switch_tab('director'));
+    d3.select("#movie-tab").on("click", () => that.switch_tab("movie"));
+    d3.select("#actor-tab").on("click", () => that.switch_tab("actor"));
+    d3.select("#director-tab").on("click", () => that.switch_tab("director"));
   };
 
   that.update_list = function() {
     let data = null;
-    if (that.current_tab == 'movie') {
+    if (that.current_tab == "movie") {
       data = DataLoader.movies.filter(
         movie =>
           DataLoader.range[0] < movie.release_date &&
           movie.release_date < DataLoader.range[1]
       );
-    }
-    else if (that.current_tab == 'actor') {
+    } else if (that.current_tab == "actor") {
       data = DataLoader.actors.filter(x => x);
     } else {
       data = DataLoader.directors.filter(x => x);
@@ -330,7 +394,7 @@ LayoutClass = function() {
     if (that.current_tab == name) return;
     that.current_tab = name;
     that.update_list();
-  }
+  };
 };
 
 const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
