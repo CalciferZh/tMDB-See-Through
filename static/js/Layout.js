@@ -49,15 +49,9 @@ LayoutClass = function() {
       margin.top -
       margin.bottom;
 
-    let maxDate = new Date(
-      Math.max(...DataLoader.movies.map(x => x.release_date))
-    );
-    let minDate = new Date(
-      Math.min(...DataLoader.movies.map(x => x.release_date))
-    );
     let xScale = d3
       .scaleTime()
-      .domain([minDate, maxDate])
+      .domain(d3.extent(DataLoader.movies.map(x => x.release_date)))
       .rangeRound([0, width]);
     let yScale = d3.scaleLinear().range([height, 0]);
     let histogram = d3
@@ -140,9 +134,9 @@ LayoutClass = function() {
       .on("zoom", zoomed);
 
     that.graph_div
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom - 40)
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom - 40)
       .append("rect")
       .attr("width", width)
       .attr("height", height)
@@ -156,7 +150,7 @@ LayoutClass = function() {
     }
 
     graph_vars["svg"] = that.graph_div
-.select("svg")
+      .select("svg")
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
@@ -175,7 +169,6 @@ LayoutClass = function() {
     graph_vars["xScale"] = d3.scaleLinear().range([0, width]);
     graph_vars["yScale"] = d3.scaleLinear().range([height, 0]);
 
-
     that.update_graph();
   };
 
@@ -190,14 +183,8 @@ LayoutClass = function() {
     let svg = graph_vars["svg"];
     let xScale = graph_vars["xScale"];
     let yScale = graph_vars["yScale"];
-    let xs = DataLoader.points.map(d => d.x);
-    let ys = DataLoader.points.map(d => d.x);
-    let x_min = Math.min(...xs);
-    let x_max = Math.max(...xs);
-    let y_min = Math.min(...ys);
-    let y_max = Math.max(...ys);
-    graph_vars["xScale"].domain([x_min, x_max]);
-    graph_vars["yScale"].domain([y_min, y_max]);
+    graph_vars["xScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
+    graph_vars["yScale"].domain(d3.extent(DataLoader.points.map(d => d.x)));
 
     DataLoader.valid_points.forEach(function(d) {
       d.cx = xScale(d.x);
@@ -238,30 +225,40 @@ LayoutClass = function() {
     points.exit().remove();
     rects.exit().remove();
 
-    points.attr("cx", d => d.cx).attr("cy", d => d.cy);
-    d3.selectAll(".visiable-name").attr("x", d => d.cx).attr("y", d => d.cy)
-    rects.attr("x", d => d.cx - d.r / 2).attr("y", d => d.cy - d.r / 2);
+    points
+      .attr("cx", d => d.cx)
+      .attr("cy", d => d.cy)
+      .attr("r", d => d.r)
+      .style("fill-opacity", d => d.opacity);
+    d3.selectAll(".visiable-name")
+      .attr("x", d => d.cx)
+      .attr("y", d => d.cy);
+    rects
+      .attr("x", d => d.cx - d.r / 2)
+      .attr("y", d => d.cy - d.r / 2)
+      .attr("width", d => d.r)
+      .attr("height", d => d.r)
+      .style("fill-opacity", d => d.opacity);
 
     points
       .enter()
       .append("circle")
-        .attr("class", "point circle")
-        .attr("cx", d => d.cx)
-        .attr("cy", d => d.cy)
-        .attr("r", d => d.r)
-        .style("fill", d => d.color)
-        .style("fill-opacity", d => d.opacity)
-        .on("mouseover", that.on_mouseover)
-        .on("mouseout", that.on_mouseout)
-        .on("dblclick", that.pin)
+      .attr("class", "point circle")
+      .attr("cx", d => d.cx)
+      .attr("cy", d => d.cy)
+      .attr("r", d => d.r)
+      .style("fill", d => d.color)
+      .style("fill-opacity", d => d.opacity)
+      .on("mouseover", that.on_mouseover)
+      .on("mouseout", that.on_mouseout)
+      .on("dblclick", that.pin)
       .append("text")
-        .attr("class", "visiable-name")
-        .attr("x", d => d.cx)
-        .attr("y", d => d.cy)
-        .text(d => d.r > 10 ? d.info.abbr : '')
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "12px");
-
+      .attr("class", "visiable-name")
+      .attr("x", d => d.cx)
+      .attr("y", d => d.cy)
+      .text(d => (d.r > 10 ? d.info.abbr : ""))
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "12px");
 
     rects
       .enter()
@@ -300,9 +297,9 @@ LayoutClass = function() {
   };
 
   that.pin = function(d) {
-    console.log("dblclick")
+    console.log("dblclick");
     DataLoader.pin(d.id);
-  }
+  };
 
   that.on_mouseout = function(d) {
     d3.selectAll(".point").style("fill-opacity", d => d.opacity);
