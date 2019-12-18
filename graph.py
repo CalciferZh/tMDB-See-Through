@@ -116,10 +116,12 @@ class MovieGraph:
         for k in SCORE_ATTRIBUTES:
           self.actor_scores[x.id][k] += \
             self.node_weights[m.id] * m.attributes[k]
+        self.actor_scores[x.id]['movie_count'] += self.node_weights[m.id]
       for x in m.directors.values():
         for k in SCORE_ATTRIBUTES:
           self.director_scores[x.id][k] += \
             self.node_weights[m.id] * m.attributes[k]
+        self.director_scores[x.id]['movie_count'] += self.node_weights[m.id]
 
     for v in self.actor_scores.values():
       v['vote_average'] /= v['movie_count']
