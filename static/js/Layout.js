@@ -16,6 +16,12 @@ LayoutClass = function() {
   that.line_brush = null;
   that.brush_g = null;
 
+  // for play
+  that.play_timer = 0;
+  that.left_border = 0;
+  that.right_border = 0;
+  that.is_playing = false;
+
   d3.select("#man-size").on("change", function() {
     let val = document.getElementById("man-size").value;
     DataLoader.set_size_method(val, true);
@@ -39,7 +45,7 @@ LayoutClass = function() {
   let graph_vars = {};
 
   that.draw_time_window = function() {
-    let margin = { top: 10, right: 30, bottom: 30, left: 40 };
+    let margin = { top: 20, right: 30, bottom: 20, left: 100 };
     let width =
       that.time_window_div.node().getBoundingClientRect().width -
       margin.left -
@@ -48,7 +54,7 @@ LayoutClass = function() {
       that.time_window_div.node().getBoundingClientRect().height -
       margin.top -
       margin.bottom;
-
+    that.max_right_border = width;
     let xScale = d3
       .scaleTime()
       .domain(d3.extent(DataLoader.movies.map(x => x.release_date)))
@@ -91,6 +97,9 @@ LayoutClass = function() {
 
     svg.append("g").call(d3.axisLeft(yScale).ticks(5));
 
+    //that.time_window_div.select("svg").append("rect").attr("id", "play-button").attr("x", 25).attr("y", height / 2).attr("height", height / 2).attr("width", height / 2).style("fill", "red");
+    that.time_window_div.select("svg").append("image").attr("id", "play-button").attr("x", 25).attr("y", height / 2).attr("height", height / 2).attr("width", height / 2)
+    .attr("xlink:href","/static/svg/play-button.svg").attr("cursor", "pointer").on('click', that.toggle_play);
     // brush
     that.line_brush = d3
       .brushX()
@@ -103,10 +112,9 @@ LayoutClass = function() {
           d3.event.selection &&
           d3.event.selection[1] - d3.event.selection[0] > 10
         ) {
-          DataLoader.set_range([
-            xScale.invert(d3.event.selection[0]),
-            xScale.invert(d3.event.selection[1])
-          ]);
+          that.left_border = d3.event.selection[0];
+          that.right_border = d3.event.selection[1];
+          DataLoader.set_range([xScale.invert(that.left_border), xScale.invert(that.right_border)]);
         }
       });
     that.brush_g = svg.append("g").attr("class", "brush");
@@ -132,19 +140,23 @@ LayoutClass = function() {
         [width, height]
       ])
       .on("start", function() {
-        graph_vars['xScale-back'] = graph_vars['xScale'];
-        graph_vars['yScale-back'] = graph_vars['yScale'];
+        graph_vars["xScale-back"] = graph_vars["xScale"];
+        graph_vars["yScale-back"] = graph_vars["yScale"];
       })
       .on("zoom", function() {
         // graph_vars["svg"].attr("transform", d3.event.transform);
-        graph_vars['xScale'] = d3.event.transform.rescaleX(graph_vars['xScale-back']);
-        graph_vars['yScale'] = d3.event.transform.rescaleY(graph_vars['yScale-back'])
+        graph_vars["xScale"] = d3.event.transform.rescaleX(
+          graph_vars["xScale-back"]
+        );
+        graph_vars["yScale"] = d3.event.transform.rescaleY(
+          graph_vars["yScale-back"]
+        );
       })
       .on("end", function() {
-        graph_vars['xScale-back'] = null;
-        graph_vars['yScale-back'] = null;
+        graph_vars["xScale-back"] = null;
+        graph_vars["yScale-back"] = null;
         if (d3.event.transform != d3.zoomIdentity.scale(1))
-        that.zoom_svg.call(that.zoom.transform, d3.zoomIdentity.scale(1));
+          that.zoom_svg.call(that.zoom.transform, d3.zoomIdentity.scale(1));
       });
 
     that.zoom_svg = that.graph_div
@@ -166,8 +178,14 @@ LayoutClass = function() {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    graph_vars["xScale"] = d3.scaleLinear().range([0, width]).domain([-1, 2]);
-    graph_vars["yScale"] = d3.scaleLinear().range([height, 0]).domain([-1, 2]);
+    graph_vars["xScale"] = d3
+      .scaleLinear()
+      .range([0, width])
+      .domain([-1, 2]);
+    graph_vars["yScale"] = d3
+      .scaleLinear()
+      .range([height, 0])
+      .domain([-1, 2]);
 
     that.update_graph();
   };
@@ -220,23 +238,28 @@ LayoutClass = function() {
       .attr("y2", d => d.target.cy)
       .style("stroke", "lightgray")
       .style("stroke-width", 1)
-      .style("stroke-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+      .style("stroke-opacity", d =>
+        d.highlighted ? that.highlight_point_opacity : d.opacity
+      );
 
     points.exit().remove();
     rects.exit().remove();
 
-    
     rects
       .attr("x", d => d.cx - d.r / 2)
       .attr("y", d => d.cy - d.r / 2)
       .attr("width", d => d.r)
       .attr("height", d => d.r)
-      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+      .style("fill-opacity", d =>
+        d.highlighted ? that.highlight_point_opacity : d.opacity
+      );
     points
       .attr("cx", d => d.cx)
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
-      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+      .style("fill-opacity", d =>
+        d.highlighted ? that.highlight_point_opacity : d.opacity
+      );
     d3.selectAll(".visiable-name")
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2);
@@ -263,10 +286,12 @@ LayoutClass = function() {
       .attr("cy", d => d.cy)
       .attr("r", d => d.r)
       .style("fill", d => d.color)
-      .style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity)
+      .style("fill-opacity", d =>
+        d.highlighted ? that.highlight_point_opacity : d.opacity
+      )
       .on("mouseover", that.on_mouseover)
       .on("mouseout", that.on_mouseout)
-      .on("dblclick", that.pin)
+      .on("dblclick", that.pin);
     points
       .enter()
       .append("text")
@@ -289,10 +314,16 @@ LayoutClass = function() {
       let info = DataLoader.get_graph_info_about_man(d);
       ids = new Set([...info.movies, ...info.collaborator]);
     }
-    d3.selectAll(".point").each(d => d.highlighted = ids.has(d.id));
-    d3.selectAll(".link").each(d => d.highlighted = ids.has(d.source.id) && ids.has(d.target.id));
-    d3.selectAll(".point").style("fill-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
-    d3.selectAll(".link").style("stroke-opacity", d => d.highlighted ? that.highlight_point_opacity : d.opacity);
+    d3.selectAll(".point").each(d => (d.highlighted = ids.has(d.id)));
+    d3.selectAll(".link").each(
+      d => (d.highlighted = ids.has(d.source.id) && ids.has(d.target.id))
+    );
+    d3.selectAll(".point").style("fill-opacity", d =>
+      d.highlighted ? that.highlight_point_opacity : d.opacity
+    );
+    d3.selectAll(".link").style("stroke-opacity", d =>
+      d.highlighted ? that.highlight_point_opacity : d.opacity
+    );
   };
 
   that.pin = function(d) {
@@ -301,8 +332,8 @@ LayoutClass = function() {
   };
 
   that.on_mouseout = function(d) {
-    d3.selectAll(".point").each(d => d.highlighted = false);
-    d3.selectAll(".link").each(d => d.highlighted = false);
+    d3.selectAll(".point").each(d => (d.highlighted = false));
+    d3.selectAll(".link").each(d => (d.highlighted = false));
     d3.selectAll(".point").style("fill-opacity", d => d.opacity);
     d3.selectAll(".link").style("stroke-opacity", d => d.opacity);
   };
@@ -392,6 +423,26 @@ LayoutClass = function() {
     if (that.current_tab == name) return;
     that.current_tab = name;
     that.update_list();
+  };
+  that.toggle_play = function() {
+    if (that.is_playing) {
+      d3.select("#play-button").attr("xlink:href","/static/svg/play-button.svg");
+      that.pause();
+    } else {
+      d3.select("#play-button").attr("xlink:href","/static/svg/pause-button.svg");
+      that.play();
+    }
+    that.is_playing = !that.is_playing;
+  }
+  that.play = function() {
+    that.left_border += 10;
+    that.right_border += 10;
+    if (that.right_border > that.max_right_border) return;
+    that.line_brush.move(that.brush_g, [that.left_border, that.right_border]);
+    that.play_timer = setTimeout(that.play, 1000);
+  };
+  that.pause = function() {
+    clearTimeout(that.play_timer);
   };
 };
 
