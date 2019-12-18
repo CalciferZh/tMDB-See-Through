@@ -281,3 +281,7 @@ th, td {
 .bootstrap-table {
     padding: 5px;
 }
+
+text {
+    pointer-events: none;
+}
