@@ -75,15 +75,11 @@ class MovieGraph:
     for m in self.movies.values():
       if m.date < date_min:
         self.node_weights[m.id] = 0
-        # self.node_weights[m.id] = \
-        #   0.5 ** ((date_min - m.date) / self.movie_half_life)
       elif m.date > date_max:
         self.node_weights[m.id] = 0
-        # self.node_weights[m.id] = \
-        #   0.5 ** ((m.date - date_max) / self.movie_half_life)
       else:
         x = 1 - abs(m.date - self.date_mid) / self.window_size
-        self.node_weights[m.id] = np.log(np.e * x - x + 1)
+        self.node_weights[m.id] = np.log(x * (np.e ** 4 - 1) + 1) / 4
         self.movies_selected.append(m.id)
       for a in m.cast.values():
         if a.id in self.node_weights.keys():
@@ -126,10 +122,10 @@ class MovieGraph:
     ]
 
     self.actor_scores = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
+      a.id: {k: 1e-8 for k in SCORE_ATTRIBUTES} for a in self.actors.values()
     }
     self.director_scores = {
-      a.id: {k: 0.0 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
+      a.id: {k: 1e-8 for k in SCORE_ATTRIBUTES} for a in self.directors.values()
     }
     for m in self.movies.values():
       for x in m.cast.values():
@@ -142,9 +138,13 @@ class MovieGraph:
             self.node_weights[m.id] * m.attributes[k]
 
     for v in self.actor_scores.values():
-      v['vote_average'] /= (v['movie_count'] + np.finfo(np.float32).eps)
+      for k in SCORE_ATTRIBUTES:
+        if k != 'movie_count':
+          v[k] /= v['movie_count']
     for v in self.director_scores.values():
-      v['vote_average'] /= (v['movie_count'] + np.finfo(np.float32).eps)
+      for k in SCORE_ATTRIBUTES:
+        if k != 'movie_count':
+          v[k] /= v['movie_count']
 
     self.edges_selected = []
     self.edges_selected_uniform_id = []
