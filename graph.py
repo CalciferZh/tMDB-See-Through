@@ -41,6 +41,8 @@ class MovieGraph:
     self.genre_edges_selected = None
     self.id_uniform_to_selected = None
     self.id_selected_to_uniform = None
+    self.date_min = None
+    self.data_max = None
     self.node_weights = {}
 
     self.pin_id = None
@@ -48,7 +50,18 @@ class MovieGraph:
 
     self.set_range(0, 1576243793)
 
+    self.related = {}
+    for m in self.movies.values():
+      for x in m.participants.values():
+        self.related[x.id] = set([m.id, x.id])
+      for a in m.participants.values():
+        for b in m.participants.values():
+          self.related[a.id].add(b.id)
+          self.related[b.id].add(a.id)
+
   def set_range(self, date_min, date_max):
+    self.date_min = date_min
+    self.date_max = date_max
     self.current_step = min(self.max_step, self.current_step * 1.5)
 
     self.id_selected_to_uniform = {}
@@ -153,6 +166,10 @@ class MovieGraph:
   def pin(self, node_id):
     self.pin_pos = self.positions_all[node_id].copy()
     self.pin_id = node_id
+    for m in self.movies.values():
+      if m.id not in self.related[self.pin_id]:
+        self.node_weights[m.id] = 0
+
 
   def unpin(self):
     self.pin_id = None
@@ -185,19 +202,6 @@ class MovieGraph:
   def export_directors(self):
     s = json.dumps({k: v.attributes for k, v in self.directors.items()})
     return s
-
-  def export_neighbors(self):
-    neighbors = {}
-    for m in self.movies.values():
-      for x in m.participants.values():
-        neighbors[x.id] = set([m.id])
-      for a in m.participants.values():
-        for b in m.participants.values():
-          neighbors[a.id].add(b.id)
-          neighbors[b.id].add(a.id)
-
-    neighbors = {k: list(v) for k, v in neighbors.items()}
-    return json.dumps(neighbors)
 
   def export_positions(self):
     s = json.dumps(
