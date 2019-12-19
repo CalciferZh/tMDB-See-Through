@@ -311,7 +311,7 @@ DataLoaderClass = function() {
     return ret;
   };
   that._pin = function(id) {
-    pinned_id = id;
+    that.pinned_id = id;
     let node = new request_node(that.pin_url, node_weights => {
       console.log(node_weights);
       for (let key in node_weights) {
