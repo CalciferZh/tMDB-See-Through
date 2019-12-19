@@ -28,12 +28,14 @@ DataLoaderClass = function() {
 
   // calculate attr
   const man_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  const man_votecnt2size = x => Math.sqrt(x.vote_count);
   const man_budget2size = x => Math.log(x.budget + 1) / 10;
   const man_revenue2size = x =>
     ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
   const man_popularity2size = x => Math.sqrt(x.popularity);
   const man_runtime2size = x => Math.sqrt(x.runtime);
   const movie_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  const movie_votecnt2size = x => Math.sqrt(x.vote_count);
   const movie_budget2size = x => Math.log(x.budget + 1) / 10;
   const movie_revenue2size = x =>
     ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
@@ -41,13 +43,15 @@ DataLoaderClass = function() {
   const movie_runtime2size = x => Math.sqrt(x.runtime);
   const man_attr2size = {
     vote_average: man_voteavg2size,
+    vote_count: man_votecnt2size,
     budget: man_budget2size,
     revenue: man_revenue2size,
     popularity: man_popularity2size,
-    runtime: man_runtime2size
+    runtime: man_runtime2size,
   };
   const movie_attr2size = {
     vote_average: movie_voteavg2size,
+    vote_count: movie_votecnt2size,
     budget: movie_budget2size,
     revenue: movie_revenue2size,
     popularity: movie_popularity2size,
