@@ -308,7 +308,7 @@ DataLoaderClass = function() {
     //   edge.target.valid = true;
     // }
     // that.valid_points = that.points.filter(d => d.valid);
-    that.valid_points = that.points;
+    that.valid_points = that.points.filter(d => d.weight > 0.1);
   };
 
   that.get_graph_info_about_man = function(man) {
