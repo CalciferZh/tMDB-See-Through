@@ -27,24 +27,37 @@ DataLoaderClass = function() {
   that.directors = [];
 
   // calculate attr
-  const voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
-  const budget2size = x => Math.log(x.budget + 1) / 10;
-  const revenue2size = x =>
+  const man_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  const man_budget2size = x => Math.log(x.budget + 1) / 10;
+  const man_revenue2size = x =>
     ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
-  const popularity2size = x => Math.sqrt(x.popularity) / 1.5;
-  const runtime2size = x => Math.sqrt(x.runtime);
-  const attr2size = {
-    vote_average: voteavg2size,
-    budget: budget2size,
-    revenue: revenue2size,
-    popularity: popularity2size,
-    runtime: runtime2size
+  const man_popularity2size = x => Math.sqrt(x.popularity);
+  const man_runtime2size = x => Math.sqrt(x.runtime);
+  const movie_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  const movie_budget2size = x => Math.log(x.budget + 1) / 10;
+  const movie_revenue2size = x =>
+    ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
+  const movie_popularity2size = x => Math.sqrt(x.popularity) / 1.5;
+  const movie_runtime2size = x => Math.sqrt(x.runtime);
+  const man_attr2size = {
+    vote_average: man_voteavg2size,
+    budget: man_budget2size,
+    revenue: man_revenue2size,
+    popularity: man_popularity2size,
+    runtime: man_runtime2size
   };
-  that.man_size_method = popularity2size;
-  that.movie_size_method = revenue2size;
+  const movie_attr2size = {
+    vote_average: movie_voteavg2size,
+    budget: movie_budget2size,
+    revenue: movie_revenue2size,
+    popularity: movie_popularity2size,
+    runtime: movie_runtime2size
+  };
+  that.man_size_method = man_popularity2size;
+  that.movie_size_method = man_revenue2size;
   that.set_size_method = function(attr, is_man) {
-    if (is_man) that.man_size_method = attr2size[attr];
-    else that.movie_size_method = attr2size[attr];
+    if (is_man) that.man_size_method = man_attr2size[attr];
+    else that.movie_size_method = movie_attr2size[attr];
   };
 
   that.set_size = function() {
@@ -313,7 +326,6 @@ DataLoaderClass = function() {
   that._pin = function(id) {
     that.pinned_id = id;
     let node = new request_node(that.pin_url, node_weights => {
-      console.log(node_weights);
       for (let key in node_weights) {
         that.points[key].weight = node_weights[key];
       }
@@ -330,6 +342,7 @@ DataLoaderClass = function() {
     node.notify();
   };
   that._unpin = function() {
+    that.pinned_id = -1;
     let node = new request_node(that.unpin_url, node_weights => {
       for (let key in node_weights) {
         that.points[key].weight = node_weights[key];
@@ -348,7 +361,6 @@ DataLoaderClass = function() {
       that._pin(id);
     } else {
       if (that.pinned_id == id) {
-        that.pinned_id = -1;
         that._unpin();
       } else {
         that._unpin();
