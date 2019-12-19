@@ -47,11 +47,12 @@ class MovieGraph:
 
     self.related = {}
     for m in self.movies.values():
+      self.related[m.id] = set([m.id])
       for x in m.participants.values():
         if x.id not in self.related.keys():
-          self.related[x.id] = set([m.id, x.id])
-        else:
-          self.related[x.id].add(m.id)
+          self.related[x.id] = set([x.id])
+        self.related[m.id].add(x.id)
+        self.related[x.id].add(m.id)
       for a in m.participants.values():
         for b in m.participants.values():
           self.related[a.id].add(b.id)
@@ -176,6 +177,7 @@ class MovieGraph:
   def pin(self, node_id):
     self.pin_pos = self.positions_all[node_id].copy()
     self.pin_id = node_id
+    self.node_weights[self.pin_id] = 10.0
     for x in self.movies.values():
       if x.id not in self.related[self.pin_id]:
         self.node_weights[x.id] = 0

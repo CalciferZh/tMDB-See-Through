@@ -63,8 +63,6 @@ def update_api():
 @app.route('/pin', methods=['POST'])
 def pin_api():
   pin_id = int(request.json['pin'])
-  if pin_id in graph.movies.keys():
-    return 'OK', 200
   graph.pin(pin_id)
   return graph.export_node_weights(), 200
 
