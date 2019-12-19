@@ -41,6 +41,8 @@ def set_range():
     datetime.datetime.strptime(request.json['date_max'], '%Y-%m-%d').timetuple()
   )
   graph.set_range(date_min, date_max)
+  if graph.pin_id is not None:
+    graph.pin(graph.pin_id)
   data = {
     'node_weights': graph.export_node_weights(),
     'actor_scores': graph.export_actor_scores(),

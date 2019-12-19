@@ -45,7 +45,7 @@ def force_attractive(dist):
 
 
 def update_layout(positions, edges, anchors, anchor_edges, step,
-                  anchor_strength=1.0, density=1.0):
+                  anchor_strength=100.0, density=1.0, cohesion=100.0):
   """
   Update graph layout with node positions and virtual nodes (anchors).
 
@@ -66,6 +66,9 @@ def update_layout(positions, edges, anchors, anchor_edges, step,
   density : float
     How "dense" the layout should be. `density` will be multiplied to attractive
     forces directly, and `1 / density` will be multiplied to the repulsive force.
+  cohesion : float
+    Will be multiplied to the forces, so that linked nodes will be closer while
+    unlinked nodes will be further.
 
   Returns
   -------
@@ -76,7 +79,8 @@ def update_layout(positions, edges, anchors, anchor_edges, step,
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps # avoid divide-by-zero
   # repulsive
-  pos_disp = np.sum(delta / dist * force_repulsive(dist), axis=1) / density
+  pos_disp = \
+    np.sum(delta / dist * force_repulsive(dist), axis=1) / density * cohesion
 
   # attractive from other nodes
   e_start = positions[edges[:, 0]]
@@ -84,7 +88,7 @@ def update_layout(positions, edges, anchors, anchor_edges, step,
   delta = e_start - e_end
   dist = np.linalg.norm(delta, axis=-1, keepdims=True)
   dist += np.finfo(np.float32).eps
-  disp = delta / dist * force_attractive(dist) * density
+  disp = delta / dist * force_attractive(dist) * density * cohesion
   for e, d in zip(edges, disp):
     pos_disp[e[0]] -= d
     pos_disp[e[1]] += d

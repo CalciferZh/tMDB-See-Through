@@ -25,9 +25,9 @@ class MovieGraph:
     self.genre_nodes = np.array([[0.5, 0.5]])
 
     self.max_step = 1e-2
-    self.min_step = 2e-4
+    self.min_step = 5e-4
     self.current_step = self.max_step
-    self.decay = 0.99
+    self.decay = 0.995
 
     self.movie_half_life = 2592000 * 6 # months
 
@@ -175,7 +175,12 @@ class MovieGraph:
     for m in self.movies.values():
       if m.id not in self.related[self.pin_id]:
         self.node_weights[m.id] = 0
-
+    for a in self.actors.values():
+      if a.id not in self.related[self.pin_id]:
+        self.node_weights[a.id] = 0
+    for a in self.directors.values():
+      if a.id not in self.related[self.pin_id]:
+        self.node_weights[a.id] = 0
 
   def unpin(self):
     self.pin_id = None
