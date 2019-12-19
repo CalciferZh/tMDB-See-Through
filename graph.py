@@ -14,20 +14,15 @@ class MovieGraph:
     self.directors = directors
     self.N = len(self.movies) + len(self.actors) + len(self.directors)
     np.random.seed(960822)
-    self.positions_all = np.random.uniform(size=[self.N, 2])
+    self.positions_all = np.random.uniform(size=[self.N, 2]) * 2 - 0.5
 
-    # sqrt3 = np.sqrt(3)
-    # self.genre_nodes = np.array([
-    #   [0, 0.5], [1, 0.5],
-    #   [0.75, 0.5 + 0.25 * sqrt3], [0.25, 0.5 - 0.25 * sqrt3],
-    #   [0.75, 0.5 - 0.25 * sqrt3], [0.25, 0.5 + 0.25 * sqrt3]
-    # ])
     self.genre_nodes = np.array([[0.5, 0.5]])
 
     self.max_step = 1e-2
-    self.min_step = 5e-4
+    self.min_step = 1e-4
     self.current_step = self.max_step
-    self.decay = 0.995
+    self.decay = 0.992
+    self.reset_step = True
 
     self.movie_half_life = 2592000 * 6 # months
 
@@ -60,11 +55,11 @@ class MovieGraph:
           self.related[b.id].add(a.id)
 
   def set_range(self, date_min, date_max):
+    self.reset_step = True
     self.date_min = date_min
     self.date_max = date_max
     self.date_mid = (self.date_max + self.date_min) / 2
     self.window_size = (self.date_max - self.date_min) / 2
-    self.current_step = min(self.max_step, self.current_step * 1.5)
 
     self.id_selected_to_uniform = {}
     self.id_uniform_to_selected = {}
@@ -141,11 +136,17 @@ class MovieGraph:
     for v in self.actor_scores.values():
       for k in SCORE_ATTRIBUTES:
         if k != 'movie_count':
-          v[k] /= v['movie_count']
+          if k == 'vote_average':
+            v[k] /= v['movie_count']
+          else:
+            v[k] /= (self.window_size / (7 * 24 * 60 * 60))
     for v in self.director_scores.values():
       for k in SCORE_ATTRIBUTES:
         if k != 'movie_count':
-          v[k] /= v['movie_count']
+          if k == 'vote_average':
+            v[k] /= v['movie_count']
+          else:
+            v[k] /= (self.window_size / (7 * 24 * 60 * 60))
 
     self.edges_selected = []
     self.edges_selected_uniform_id = []
@@ -185,12 +186,14 @@ class MovieGraph:
   def unpin(self):
     self.pin_id = None
 
-  def update(self, step=None):
+  def update(self):
     if self.positions_selected.shape[0] <= 0:
       return
-    if step is None:
-      step = self.current_step
-      self.current_step = max(self.current_step * self.decay, self.min_step)
+    if self.reset_step:
+      self.reset_step = False
+      self.current_step = self.max_step
+    step = self.current_step
+    self.current_step = max(self.current_step * self.decay, self.min_step)
     self.positions_selected = update_layout(
       self.positions_selected, self.edges_selected,
       self.genre_nodes, self.genre_edges_selected,
