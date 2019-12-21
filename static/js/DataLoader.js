@@ -27,20 +27,40 @@ DataLoaderClass = function() {
   that.directors = [];
 
   // calculate attr
-  const man_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
-  const man_votecnt2size = x => Math.sqrt(x.vote_count);
-  const man_budget2size = x => Math.log(x.budget + 1) / 10;
+  // const man_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  // const man_votecnt2size = x => Math.sqrt(x.vote_count);
+  // const man_budget2size = x => Math.log(x.budget + 1) / 10;
+  // const man_revenue2size = x =>
+  //   ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
+  // const man_popularity2size = x => Math.sqrt(x.popularity);
+  // const man_runtime2size = x => Math.sqrt(x.runtime);
+  // const movie_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
+  // const movie_votecnt2size = x => Math.sqrt(x.vote_count);
+  // const movie_budget2size = x => Math.log(x.budget + 1) / 10;
+  // const movie_revenue2size = x =>
+  //   ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
+  // const movie_popularity2size = x => Math.sqrt(x.popularity) / 1.5;
+  // const movie_runtime2size = x => Math.sqrt(x.runtime);
+
+  const man_voteavg2size = x => (x.vote_average - 4.5) * (x.vote_average - 4.5);
+  const man_votecnt2size = x => Math.sqrt(x.vote_count) / 1.5;
+  const man_budget2size = x => 
+    ((Math.log(x.budget + 1) - 10) * (Math.log(x.budget + 1) - 10)) / 3;
   const man_revenue2size = x =>
-    ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
-  const man_popularity2size = x => Math.sqrt(x.popularity);
-  const man_runtime2size = x => Math.sqrt(x.runtime);
-  const movie_voteavg2size = x => (x.vote_average - 3) * (x.vote_average - 3);
-  const movie_votecnt2size = x => Math.sqrt(x.vote_count);
-  const movie_budget2size = x => Math.log(x.budget + 1) / 10;
+    ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 4;
+  const man_popularity2size = x => Math.sqrt(x.popularity) * 6 + 1;
+  const man_runtime2size = x => Math.sqrt(x.runtime) * 5;
+  const movie_voteavg2size = x => (x.vote_average - 4) * (x.vote_average - 4);
+  const movie_votecnt2size = x => 
+    (Math.log(x.vote_count + 1) - 5) * Math.sqrt(x.vote_count) / 20;
+  const movie_budget2size = x => 
+    ((Math.log(x.budget + 1) - 10) * (Math.log(x.budget + 1) - 10)) / 6;
   const movie_revenue2size = x =>
-    ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 6;
-  const movie_popularity2size = x => Math.sqrt(x.popularity) / 1.5;
+    (Math.sqrt(x.revenue + 1) - 10)/ 1500;
+  const movie_popularity2size = x => Math.sqrt(x.popularity) * 1.5;
   const movie_runtime2size = x => Math.sqrt(x.runtime);
+
+
   const man_attr2size = {
     vote_average: man_voteavg2size,
     vote_count: man_votecnt2size,
