@@ -21,6 +21,8 @@ LayoutClass = function() {
   that.left_border = 0;
   that.right_border = 0;
   that.is_playing = false;
+  that.scale_k = 1;
+  that.r_threshold = 10;
 
   d3.select("#man-size").on("change", function() {
     let val = document.getElementById("man-size").value;
@@ -156,7 +158,6 @@ LayoutClass = function() {
         graph_vars["yScale-back"] = graph_vars["yScale"];
       })
       .on("zoom", function() {
-        // graph_vars["svg"].attr("transform", d3.event.transform);
         graph_vars["xScale"] = d3.event.transform.rescaleX(
           graph_vars["xScale-back"]
         );
@@ -167,6 +168,8 @@ LayoutClass = function() {
       .on("end", function() {
         graph_vars["xScale-back"] = null;
         graph_vars["yScale-back"] = null;
+        that.scale_k *= d3.event.transform.k;
+        that.r_threshold /= d3.event.transform.k;
         if (d3.event.transform != d3.zoomIdentity.scale(1))
           that.zoom_svg.call(that.zoom.transform, d3.zoomIdentity.scale(1));
       });
@@ -272,10 +275,18 @@ LayoutClass = function() {
       .style("fill-opacity", d =>
         d.highlighted ? that.highlight_point_opacity : d.opacity
       );
-    d3.selectAll(".visiable-name")
+    d3.selectAll(".man-visiable-name")
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2)
-      .text(d => (d.r > 15 || d.highlighted ? d.info.abbr : ""))
+      .text(d => (d.r > that.r_threshold || d.highlighted ? d.info.abbr : ""))
+      .attr(
+        "opacity",
+        d => 1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity)
+      );
+    d3.selectAll(".movie-visiable-name")
+      .attr("x", d => d.cx + d.r)
+      .attr("y", d => d.cy + d.r / 4)
+      .text(d => (d.r > that.r_threshold || d.highlighted ? d.info.abbr : ""))
       .attr(
         "opacity",
         d => 1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity)
@@ -295,6 +306,21 @@ LayoutClass = function() {
       .on("mouseout", that.on_mouseout)
       .on("dblclick", that.pin);
 
+    rects
+      .enter()
+      .append("text")
+      .attr("class", "movie-visiable-name")
+      .attr("x", d => d.cx)
+      .attr("y", d => d.cy)
+      .text(d => (d.r > 8 ? d.info.abbr : ""))
+      .attr(
+        "opacity",
+        d => 1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity)
+      )
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "12px");
+
+
     points
       .enter()
       .append("circle")
@@ -312,7 +338,7 @@ LayoutClass = function() {
     points
       .enter()
       .append("text")
-      .attr("class", "visiable-name")
+      .attr("class", "man-visiable-name")
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2)
       .text(d => (d.r > 8 ? d.info.abbr : ""))
