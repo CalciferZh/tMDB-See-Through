@@ -285,7 +285,3 @@ th, td {
 text {
     pointer-events: none;
 }
-
-span {
-    pointer-events: none;
-}

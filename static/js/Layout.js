@@ -98,8 +98,17 @@ LayoutClass = function() {
     svg.append("g").call(d3.axisLeft(yScale).ticks(5));
 
     //that.time_window_div.select("svg").append("rect").attr("id", "play-button").attr("x", 25).attr("y", height / 2).attr("height", height / 2).attr("width", height / 2).style("fill", "red");
-    that.time_window_div.select("svg").append("image").attr("id", "play-button").attr("x", 25).attr("y", height / 2).attr("height", height / 2).attr("width", height / 2)
-    .attr("xlink:href","/static/svg/play-button.svg").attr("cursor", "pointer").on('click', that.toggle_play);
+    that.time_window_div
+      .select("svg")
+      .append("image")
+      .attr("id", "play-button")
+      .attr("x", 25)
+      .attr("y", height / 2)
+      .attr("height", height / 2)
+      .attr("width", height / 2)
+      .attr("xlink:href", "/static/svg/play-button.svg")
+      .attr("cursor", "pointer")
+      .on("click", that.toggle_play);
     // brush
     that.line_brush = d3
       .brushX()
@@ -114,7 +123,10 @@ LayoutClass = function() {
         ) {
           that.left_border = d3.event.selection[0];
           that.right_border = d3.event.selection[1];
-          DataLoader.set_range([xScale.invert(that.left_border), xScale.invert(that.right_border)]);
+          DataLoader.set_range([
+            xScale.invert(that.left_border),
+            xScale.invert(that.right_border)
+          ]);
         }
       });
     that.brush_g = svg.append("g").attr("class", "brush");
@@ -264,8 +276,10 @@ LayoutClass = function() {
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2)
       .text(d => (d.r > 15 || d.highlighted ? d.info.abbr : ""))
-      .attr("opacity", d =>
-      1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity));
+      .attr(
+        "opacity",
+        d => 1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity)
+      );
 
     rects
       .enter()
@@ -302,8 +316,10 @@ LayoutClass = function() {
       .attr("x", d => d.cx + d.r)
       .attr("y", d => d.cy + d.r / 2)
       .text(d => (d.r > 8 ? d.info.abbr : ""))
-      .attr("opacity", d =>
-      1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity))
+      .attr(
+        "opacity",
+        d => 1.5 * (d.highlighted ? that.highlight_point_opacity : d.opacity)
+      )
       .attr("font-family", "sans-serif")
       .attr("font-size", "12px");
   };
@@ -329,6 +345,10 @@ LayoutClass = function() {
     d3.selectAll(".link").style("stroke-opacity", d =>
       d.highlighted ? that.highlight_point_opacity : d.opacity
     );
+  };
+
+  that.on_mouseover_by_name = function(name) {
+    that.on_mouseover(DataLoader.points.find(x => x.info.name == name));
   };
 
   that.pin = function(d) {
@@ -368,7 +388,8 @@ LayoutClass = function() {
     let columns = [
       {
         field: "name",
-        title: "Name"
+        title: "Name",
+        sortable: true
       },
       {
         field: "vote_average",
@@ -393,13 +414,10 @@ LayoutClass = function() {
           .select("#list-row")
           .node()
           .getBoundingClientRect().height - 40,
-      sortName: "vote_average",
-      sortOrder: "desc",
+      sortName: "name",
+      // sortOrder: "desc",
       columns: columns,
-      data: DataLoader.movies,
-      onClickRow: function(row, element, field) {
-        that.on_mouseover(DataLoader.points[row.id]);
-      }
+      data: DataLoader.movies
     });
     that.current_tab = "movie";
 
@@ -422,6 +440,17 @@ LayoutClass = function() {
       data = DataLoader.directors.filter(x => x);
     }
     that.table.bootstrapTable("refreshOptions", { data: data });
+    that.table.on("post-body.bs.table", function() {
+      $("#table-list tbody > tr").each(function() {
+        d3.select(this)
+          .on("mouseover", function() {
+            that.on_mouseover_by_name(this.cells[0].textContent);
+          })
+          .on("mouseout", function() {
+            that.on_mouseover_by_name(this.cells[0].textContent);
+          });
+      });
+    });
   };
 
   that.switch_tab = function(name) {
@@ -431,14 +460,20 @@ LayoutClass = function() {
   };
   that.toggle_play = function() {
     if (that.is_playing) {
-      d3.select("#play-button").attr("xlink:href","/static/svg/play-button.svg");
+      d3.select("#play-button").attr(
+        "xlink:href",
+        "/static/svg/play-button.svg"
+      );
       that.pause();
     } else {
-      d3.select("#play-button").attr("xlink:href","/static/svg/pause-button.svg");
+      d3.select("#play-button").attr(
+        "xlink:href",
+        "/static/svg/pause-button.svg"
+      );
       that.play();
     }
     that.is_playing = !that.is_playing;
-  }
+  };
   that.play = function() {
     that.left_border += 10;
     that.right_border += 10;

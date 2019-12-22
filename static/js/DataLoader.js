@@ -44,22 +44,20 @@ DataLoaderClass = function() {
 
   const man_voteavg2size = x => (x.vote_average - 4.5) * (x.vote_average - 4.5);
   const man_votecnt2size = x => Math.sqrt(x.vote_count) / 1.5;
-  const man_budget2size = x => 
+  const man_budget2size = x =>
     ((Math.log(x.budget + 1) - 10) * (Math.log(x.budget + 1) - 10)) / 3;
   const man_revenue2size = x =>
     ((Math.log(x.revenue + 1) - 10) * (Math.log(x.revenue + 1) - 10)) / 4;
   const man_popularity2size = x => Math.sqrt(x.popularity) * 6 + 1;
   const man_runtime2size = x => Math.sqrt(x.runtime) * 5;
   const movie_voteavg2size = x => (x.vote_average - 4) * (x.vote_average - 4);
-  const movie_votecnt2size = x => 
-    (Math.log(x.vote_count + 1) - 5) * Math.sqrt(x.vote_count) / 20;
-  const movie_budget2size = x => 
+  const movie_votecnt2size = x =>
+    ((Math.log(x.vote_count + 1) - 5) * Math.sqrt(x.vote_count)) / 20;
+  const movie_budget2size = x =>
     ((Math.log(x.budget + 1) - 10) * (Math.log(x.budget + 1) - 10)) / 6;
-  const movie_revenue2size = x =>
-    (Math.sqrt(x.revenue + 1) - 10)/ 1500;
+  const movie_revenue2size = x => (Math.sqrt(x.revenue + 1) - 10) / 1500;
   const movie_popularity2size = x => Math.sqrt(x.popularity) * 1.5;
   const movie_runtime2size = x => Math.sqrt(x.runtime);
-
 
   const man_attr2size = {
     vote_average: man_voteavg2size,
@@ -67,7 +65,7 @@ DataLoaderClass = function() {
     budget: man_budget2size,
     revenue: man_revenue2size,
     popularity: man_popularity2size,
-    runtime: man_runtime2size,
+    runtime: man_runtime2size
   };
   const movie_attr2size = {
     vote_average: movie_voteavg2size,
@@ -237,27 +235,41 @@ DataLoaderClass = function() {
           for (let attr in data.actor_scores[key]) {
             that.actors[key][attr] = data.actor_scores[key][attr];
           }
-          if ("popularity" in data.actor_scores[key])
-            that.actors[key]["popularity"] = that.actors[key][
-              "popularity"
-            ].toFixed(2);
-          if ("vote_average" in data.actor_scores[key])
-            that.actors[key]["vote_average"] = that.actors[key][
-              "vote_average"
-            ].toFixed(1);
+          that.actors[key]["popularity"] = that.actors[key][
+            "popularity"
+          ].toFixed(2);
+          that.actors[key]["vote_average"] = that.actors[key][
+            "vote_average"
+          ].toFixed(1);
+          that.actors[key]["revenue"] = that.actors[key]["revenue"].toPrecision(
+            8
+          );
+          that.actors[key]["budget"] = that.actors[key]["budget"].toPrecision(
+            8
+          );
+          if (that.actors[key]["revenue"] < 1) that.actors[key]["revenue"] = 0;
+          if (that.actors[key]["budget"] < 1) that.actors[key]["budget"] = 0;
         }
         for (let key in data.director_scores) {
           for (let attr in data.director_scores[key]) {
             that.directors[key][attr] = data.director_scores[key][attr];
           }
-          if ("popularity" in data.director_scores[key])
-            that.directors[key]["popularity"] = that.directors[key][
-              "popularity"
-            ].toFixed(2);
-          if ("vote_average" in data.director_scores[key])
-            that.directors[key]["vote_average"] = that.directors[key][
-              "vote_average"
-            ].toFixed(1);
+          that.directors[key]["popularity"] = that.directors[key][
+            "popularity"
+          ].toFixed(2);
+          that.directors[key]["vote_average"] = that.directors[key][
+            "vote_average"
+          ].toFixed(1);
+          that.directors[key]["revenue"] = that.directors[key][
+            "revenue"
+          ].toPrecision(8);
+          that.directors[key]["budget"] = that.directors[key][
+            "budget"
+          ].toPrecision(8);
+          if (that.directors[key]["revenue"] < 1)
+            that.directors[key]["revenue"] = 0;
+          if (that.directors[key]["budget"] < 1)
+            that.directors[key]["budget"] = 0;
         }
         for (let _edge of data.edges) {
           let edge = {
@@ -349,14 +361,19 @@ DataLoaderClass = function() {
   };
   that._pin = function(id) {
     that.pinned_id = id;
-    let node = new request_node(that.pin_url, node_weights => {
-      for (let key in node_weights) {
-        that.points[key].weight = node_weights[key];
-      }
-      that.set_size();
-      that.set_opacity();
-      that.set_valid();
-    }, "json", "POST");
+    let node = new request_node(
+      that.pin_url,
+      node_weights => {
+        for (let key in node_weights) {
+          that.points[key].weight = node_weights[key];
+        }
+        that.set_size();
+        that.set_opacity();
+        that.set_valid();
+      },
+      "json",
+      "POST"
+    );
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
@@ -367,14 +384,19 @@ DataLoaderClass = function() {
   };
   that._unpin = function() {
     that.pinned_id = -1;
-    let node = new request_node(that.unpin_url, node_weights => {
-      for (let key in node_weights) {
-        that.points[key].weight = node_weights[key];
-      }
-      that.set_size();
-      that.set_opacity();
-      that.set_valid();
-    }, "json", "GET");
+    let node = new request_node(
+      that.unpin_url,
+      node_weights => {
+        for (let key in node_weights) {
+          that.points[key].weight = node_weights[key];
+        }
+        that.set_size();
+        that.set_opacity();
+        that.set_valid();
+      },
+      "json",
+      "GET"
+    );
     node.set_header({
       "Content-Type": "application/json;charset=UTF-8"
     });
