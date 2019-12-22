@@ -110,7 +110,7 @@ body {
     border-radius: 0px 0px 8px 8px; */
     -ms-border-radius: 8px 8px 0px 0px;
     border-radius: 8px 8px 0px 0px;
-    font-size: 20px;
+    font-size: 24px;
 }
 
 .my-panel-seg {
@@ -262,7 +262,7 @@ info:not(:disabled):not(.disabled).active,
     margin-left: 0.5%;
     margin-right: 0.5%;
     /* border-top: 1px solid lightgray; */
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid #778899;
 }
 
 .btn {
@@ -283,5 +283,9 @@ th, td {
 }
 
 text {
+    pointer-events: none;
+}
+
+span {
     pointer-events: none;
 }
