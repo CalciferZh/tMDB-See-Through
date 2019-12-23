@@ -1,5 +1,5 @@
-data/
 *.mp4
+/data
 *.json
 .idea/
 # Byte-compiled / optimized / DLL files
